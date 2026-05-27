@@ -18,6 +18,7 @@ from .core import (
 from .context import save_context
 from .diagnostics import collect_diagnostics, detect_tools
 from .repair import apply_repair_plan, build_repair_plan
+from .state import update_state
 from .skills import (
     bind_skill_root,
     describe_skill_home,
@@ -67,6 +68,14 @@ def main(argv: list[str] | None = None) -> int:
     init_parser.add_argument("--model", default="gpt-5.2")
 
     subparsers.add_parser("scan", help="Print detected project signals.")
+    state_parser = subparsers.add_parser("state", help="Update AgentFlow session state.")
+    state_subparsers = state_parser.add_subparsers(dest="state_command", required=True)
+    state_set_parser = state_subparsers.add_parser("set", help="Set state fields.")
+    state_set_parser.add_argument("--phase", default=None)
+    state_set_parser.add_argument("--goal", default=None, help="Current goal.")
+    state_set_parser.add_argument("--change", default=None, help="Active change id or folder.")
+    state_set_parser.add_argument("--next", default=None, help="Next action.")
+    state_set_parser.add_argument("--blocked", choices=["true", "false"], default=None)
 
     ask_parser = subparsers.add_parser("ask", help="Recommend a workflow for a request.")
     ask_parser.add_argument("request", help="What you want to build or fix.")
@@ -181,6 +190,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "scan":
         print(to_json(scan_project(cwd)))
         return 0
+
+    if args.command == "state":
+        if args.state_command == "set":
+            blocked = None if args.blocked is None else args.blocked == "true"
+            updated = update_state(
+                cwd,
+                phase=args.phase,
+                current_goal=args.goal,
+                active_change=args.change,
+                next_action=args.next,
+                blocked=blocked,
+            )
+            print("Updated state:")
+            for key in ("phase", "current_goal", "active_change", "next_action", "blocked"):
+                if key in updated:
+                    print(f"- {key}: {updated[key]}")
+            return 0
+        return 1
 
     if args.command == "ask":
         advice = recommend_route(args.request, scan_project(cwd))

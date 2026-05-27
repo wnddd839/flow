@@ -182,6 +182,30 @@ class CliTests(unittest.TestCase):
             self.assertIn("claude", names)
             self.assertIn("cursor", names)
 
+    def test_cli_state_set_updates_state_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "CLI Demo")
+
+            result = run_cli(
+                project_dir,
+                "state",
+                "set",
+                "--phase",
+                "implement",
+                "--goal",
+                "improve local workflow",
+                "--next",
+                "save context",
+            )
+            status = run_cli(project_dir, "status")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Updated state", result.stdout)
+            self.assertIn('phase: "implement"', status.stdout)
+            self.assertIn('current_goal: "improve local workflow"', status.stdout)
+            self.assertIn('next_action: "save context"', status.stdout)
+
     def test_cli_skills_import_list_and_sync(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

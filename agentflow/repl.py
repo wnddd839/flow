@@ -33,6 +33,7 @@ from .core import (
 from .context import save_context
 from .diagnostics import detect_tools
 from .repair import apply_repair_plan, build_repair_plan
+from .state import update_state
 from .skills import (
     bind_skill_root,
     describe_skill_home,
@@ -114,6 +115,7 @@ COMMAND_TABLE_DATA = [
     ("/zip <path>", "Import a zipped skill package"),
     ("/home", "Show global skill home"),
     ("/status", "Show current state"),
+    ("/state", "Update current phase, goal, or next action"),
     ("/scan", "Detect project signals"),
     ("/ask <request>", "Template helper: recommend workflow"),
     ("/handoff <agent> <req>", "Template helper: generate handoff prompt"),
@@ -537,6 +539,7 @@ def _print_commands() -> None:
             ("/instructions", "Show universal agent instructions"),
             ("/editors", "Toggle which editors get an entrypoint"),
             ("/status", "Show current state"),
+            ("/state <phase> <goal>", "Update current phase and goal"),
             ("/scan", "Detect project signals"),
         ],
         f"{BOX} Skill Management": [
@@ -821,6 +824,20 @@ def _handle_command(root: Path, line: str) -> bool:
             border_style=ACCENT,
             padding=(1, 2),
         ))
+        return False
+
+    if command == "/state":
+        if not args:
+            console.print(f"[{WARN}]Usage:[/] /state <phase> [goal text]")
+            return False
+        phase = args[0]
+        goal = " ".join(args[1:]) if len(args) > 1 else None
+        try:
+            update_state(root, phase=phase, current_goal=goal)
+        except FileNotFoundError as exc:
+            console.print(f"[{ERR}]{exc}[/]")
+            return False
+        console.print(f"[{OK}]Updated state:[/] phase={phase}")
         return False
 
     if command == "/doctor":

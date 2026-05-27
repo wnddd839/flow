@@ -15,6 +15,7 @@ from agentflow.core import (
 from agentflow.repair import apply_repair_plan, build_repair_plan
 from agentflow.context import render_context_markdown, save_context
 from agentflow.diagnostics import detect_tools
+from agentflow.state import load_state, update_state
 from agentflow.skills import (
     bind_skill_root,
     discover_global_skills,
@@ -270,6 +271,25 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(by_name["cursor"].status, "ok")
         self.assertEqual(by_name["claude"].status, "missing")
         self.assertEqual(by_name["claude"].path, "")
+
+    def test_update_state_changes_selected_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            init_project(project_dir, project_name="Demo")
+
+            updated = update_state(
+                project_dir,
+                phase="implement",
+                current_goal="ship local assistant",
+                next_action="run flow context save",
+            )
+
+            self.assertEqual(updated["phase"], "implement")
+            self.assertEqual(updated["current_goal"], "ship local assistant")
+            self.assertEqual(updated["next_action"], "run flow context save")
+            loaded = load_state(project_dir)
+            self.assertEqual(loaded["phase"], "implement")
+            self.assertEqual(loaded["current_goal"], "ship local assistant")
 
     def test_global_skill_import_and_sync_updates_project_index(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

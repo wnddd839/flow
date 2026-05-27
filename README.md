@@ -61,6 +61,7 @@ closest match.
 | `/ask <request>`                 | Legacy template helper                   |
 | `/handoff <agent> <request>`     | Legacy handoff prompt helper             |
 | `/status`                        | Show `.agentflow/state.yaml`             |
+| `/state <phase> [goal]`          | Update the current phase and goal        |
 | `/scan`                          | Detect project signals                   |
 | `/menu`                          | Numbered shortcuts                       |
 | `/help`                          | Show all commands                        |
@@ -87,6 +88,7 @@ flow scan
 flow ask "fix pagination bug"
 flow handoff codex "fix pagination bug"
 flow status
+flow state set --phase implement --goal "ship local assistant" --next "save context"
 flow doctor
 flow tools
 flow tools --json
@@ -130,6 +132,13 @@ flow context save
 Writes `FLOW_CONTEXT.md`, a portable handoff snapshot with project signals,
 verification candidates, git state, and `.agentflow/state.yaml`. Paste it into
 another coding tool when switching sessions.
+
+```bash
+flow state set --phase implement --goal "ship local assistant" --next "save context"
+```
+
+Updates `.agentflow/state.yaml` so future handoffs and `flow context save`
+include the current goal and next action.
 
 ## Global Skills
 
