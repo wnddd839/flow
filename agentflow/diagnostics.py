@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 from .core import doctor_project
 
@@ -27,6 +28,35 @@ class DiagnosticItem:
     message: str
 
 
+@dataclass(frozen=True)
+class ToolInfo:
+    name: str
+    display: str
+    command: str
+    status: str
+    path: str
+
+
+def detect_tools(
+    path_resolver: Callable[[str], str | None] = shutil.which,
+) -> list[ToolInfo]:
+    """Detect known local AI coding tools without invoking them."""
+
+    tools: list[ToolInfo] = []
+    for command, label in KNOWN_TOOLS:
+        path = path_resolver(command) or ""
+        tools.append(
+            ToolInfo(
+                name=command,
+                display=label,
+                command=command,
+                status="ok" if path else "missing",
+                path=path,
+            )
+        )
+    return tools
+
+
 def collect_diagnostics(
     project_dir: str | Path,
     home: str | Path | None = None,
@@ -43,10 +73,8 @@ def collect_diagnostics(
         for missing in report["missing"]:
             items.append(DiagnosticItem("AgentFlow", missing, "missing", "run `flow repair`"))
 
-    for command, label in KNOWN_TOOLS:
-        path = shutil.which(command)
-        status = "ok" if path else "missing"
-        message = path or "not found on PATH"
-        items.append(DiagnosticItem("Tools", label, status, message))
+    for tool in detect_tools():
+        message = tool.path or "not found on PATH"
+        items.append(DiagnosticItem("Tools", tool.display, tool.status, message))
 
     return items

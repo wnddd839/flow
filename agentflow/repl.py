@@ -31,6 +31,7 @@ from .core import (
     to_json,
 )
 from .context import save_context
+from .diagnostics import detect_tools
 from .repair import apply_repair_plan, build_repair_plan
 from .skills import (
     bind_skill_root,
@@ -96,6 +97,7 @@ BLOCK_EMPTY = "□" if IS_UTF8 else "-"
 COMMAND_TABLE_DATA = [
     ("/init [name]", "Initialize AI coding framework"),
     ("/doctor", "Check project configuration"),
+    ("/tools", "Show local AI coding tools"),
     ("/repair", "Restore missing AgentFlow files"),
     ("/context", "Save a no-API handoff snapshot"),
     ("/instructions", "Show universal agent instructions"),
@@ -529,6 +531,7 @@ def _print_commands() -> None:
         f"{GEAR} Setup & Diagnostics": [
             ("/init [name]", "Initialize AI coding framework"),
             ("/doctor", "Check project configuration"),
+            ("/tools", "Show local AI coding tools"),
             ("/repair", "Restore missing AgentFlow files"),
             ("/context", "Save a no-API handoff snapshot"),
             ("/instructions", "Show universal agent instructions"),
@@ -653,6 +656,24 @@ def _handle_command(root: Path, line: str) -> bool:
 
     if command == "/instructions":
         _wizard_instructions(root)
+        return False
+
+    if command == "/tools":
+        table = Table(show_header=True, header_style="bold", expand=False)
+        table.add_column("Tool", style=f"bold {ACCENT}")
+        table.add_column("Status")
+        table.add_column("Command")
+        table.add_column("Path", style=DIM)
+        for tool in detect_tools():
+            status = f"[{OK}]ok[/]" if tool.status == "ok" else f"[{WARN}]missing[/]"
+            table.add_row(tool.display, status, tool.command, tool.path or "not found on PATH")
+        console.print(Panel(
+            table,
+            title="[bold]Local Tools[/]",
+            title_align="left",
+            border_style=ACCENT,
+            padding=(1, 2),
+        ))
         return False
 
     if command == "/repair":

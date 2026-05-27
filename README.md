@@ -44,6 +44,7 @@ closest match.
 | -------------------------------- | ---------------------------------------- |
 | `/init [name]`                   | Set up repeatable coding flow            |
 | `/doctor`                        | Check project configuration              |
+| `/tools`                         | Show local AI coding tool availability   |
 | `/repair`                        | Restore missing AgentFlow files          |
 | `/context`                       | Save a no-API handoff snapshot           |
 | `/instructions`                  | Show universal agent instructions        |
@@ -87,6 +88,8 @@ flow ask "fix pagination bug"
 flow handoff codex "fix pagination bug"
 flow status
 flow doctor
+flow tools
+flow tools --json
 flow repair --dry-run
 flow repair
 flow context save
@@ -103,6 +106,14 @@ flow doctor
 
 Checks the AgentFlow project files and prints local tool availability for common
 AI coding CLIs such as Codex, Claude Code, Cursor, Kiro, Qoder, and Gemini.
+
+```bash
+flow tools
+flow tools --json
+```
+
+Shows the local AI coding tools Flow can see on `PATH`. Use `--json` when another
+script or dashboard needs machine-readable output.
 
 ```bash
 flow repair --dry-run

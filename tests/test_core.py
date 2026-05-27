@@ -14,6 +14,7 @@ from agentflow.core import (
 )
 from agentflow.repair import apply_repair_plan, build_repair_plan
 from agentflow.context import render_context_markdown, save_context
+from agentflow.diagnostics import detect_tools
 from agentflow.skills import (
     bind_skill_root,
     discover_global_skills,
@@ -257,6 +258,18 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(result["path"], str(output))
             self.assertTrue(output.is_file())
             self.assertIn("# Flow Context", output.read_text(encoding="utf-8"))
+
+    def test_detect_tools_reports_installed_and_missing_tools(self) -> None:
+        paths = {"codex": "C:/Tools/codex.exe", "cursor": "D:/Cursor/cursor.cmd"}
+
+        tools = detect_tools(path_resolver=lambda command: paths.get(command))
+
+        by_name = {tool.name: tool for tool in tools}
+        self.assertEqual(by_name["codex"].status, "ok")
+        self.assertEqual(by_name["codex"].path, "C:/Tools/codex.exe")
+        self.assertEqual(by_name["cursor"].status, "ok")
+        self.assertEqual(by_name["claude"].status, "missing")
+        self.assertEqual(by_name["claude"].path, "")
 
     def test_global_skill_import_and_sync_updates_project_index(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

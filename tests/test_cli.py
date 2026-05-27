@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 import os
+import json
 from pathlib import Path
 
 
@@ -167,6 +168,19 @@ class CliTests(unittest.TestCase):
             context_file = project_dir / "FLOW_CONTEXT.md"
             self.assertTrue(context_file.is_file())
             self.assertIn("# Flow Context", context_file.read_text(encoding="utf-8"))
+
+    def test_cli_tools_json_outputs_known_tool_statuses(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+
+            result = run_cli(project_dir, "tools", "--json")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(result.stdout)
+            names = {item["name"] for item in data["tools"]}
+            self.assertIn("codex", names)
+            self.assertIn("claude", names)
+            self.assertIn("cursor", names)
 
     def test_cli_skills_import_list_and_sync(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

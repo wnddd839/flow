@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -15,7 +16,7 @@ from .core import (
     to_json,
 )
 from .context import save_context
-from .diagnostics import collect_diagnostics
+from .diagnostics import collect_diagnostics, detect_tools
 from .repair import apply_repair_plan, build_repair_plan
 from .skills import (
     bind_skill_root,
@@ -80,6 +81,8 @@ def main(argv: list[str] | None = None) -> int:
     repair_parser.add_argument("--dry-run", action="store_true", help="Show the repair plan only.")
     repair_parser.add_argument("--name", default=None, help="Project display name for recreated files.")
     subparsers.add_parser("instructions", help="Show universal agent instructions.")
+    tools_parser = subparsers.add_parser("tools", help="Show local AI coding tool availability.")
+    tools_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     context_parser = subparsers.add_parser("context", help="Create local handoff context snapshots.")
     context_subparsers = context_parser.add_subparsers(dest="context_command", required=True)
     context_save_parser = context_subparsers.add_parser("save", help="Write FLOW_CONTEXT.md.")
@@ -242,6 +245,34 @@ def main(argv: list[str] | None = None) -> int:
             print("Project not initialized. Run `flow init` first.")
             return 1
         print(AGENT_INSTRUCTIONS)
+        return 0
+
+    if args.command == "tools":
+        tools = detect_tools()
+        if args.json:
+            print(
+                json.dumps(
+                    {
+                        "tools": [
+                            {
+                                "name": tool.name,
+                                "display": tool.display,
+                                "command": tool.command,
+                                "status": tool.status,
+                                "path": tool.path,
+                            }
+                            for tool in tools
+                        ]
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            return 0
+        print("Local AI coding tools:")
+        for tool in tools:
+            location = tool.path or "not found on PATH"
+            print(f"- [{tool.status}] {tool.display} ({tool.command}): {location}")
         return 0
 
     if args.command == "context":
