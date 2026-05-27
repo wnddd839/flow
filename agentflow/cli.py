@@ -76,6 +76,16 @@ def main(argv: list[str] | None = None) -> int:
     state_set_parser.add_argument("--change", default=None, help="Active change id or folder.")
     state_set_parser.add_argument("--next", default=None, help="Next action.")
     state_set_parser.add_argument("--blocked", choices=["true", "false"], default=None)
+    snapshot_parser = subparsers.add_parser(
+        "snapshot",
+        help="Update state and save a handoff context in one step.",
+    )
+    snapshot_parser.add_argument("--phase", default=None)
+    snapshot_parser.add_argument("--goal", default=None, help="Current goal.")
+    snapshot_parser.add_argument("--change", default=None, help="Active change id or folder.")
+    snapshot_parser.add_argument("--next", default=None, help="Next action.")
+    snapshot_parser.add_argument("--blocked", choices=["true", "false"], default=None)
+    snapshot_parser.add_argument("--output", default=None, help="Output path, default FLOW_CONTEXT.md.")
 
     ask_parser = subparsers.add_parser("ask", help="Recommend a workflow for a request.")
     ask_parser.add_argument("request", help="What you want to build or fix.")
@@ -208,6 +218,24 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"- {key}: {updated[key]}")
             return 0
         return 1
+
+    if args.command == "snapshot":
+        blocked = None if args.blocked is None else args.blocked == "true"
+        updated = update_state(
+            cwd,
+            phase=args.phase,
+            current_goal=args.goal,
+            active_change=args.change,
+            next_action=args.next,
+            blocked=blocked,
+        )
+        result = save_context(cwd, output=args.output)
+        print("Updated state:")
+        for key in ("phase", "current_goal", "active_change", "next_action", "blocked"):
+            if key in updated:
+                print(f"- {key}: {updated[key]}")
+        print(f"Saved context: {result['path']}")
+        return 0
 
     if args.command == "ask":
         advice = recommend_route(args.request, scan_project(cwd))

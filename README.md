@@ -62,6 +62,7 @@ closest match.
 | `/handoff <agent> <request>`     | Legacy handoff prompt helper             |
 | `/status`                        | Show `.agentflow/state.yaml`             |
 | `/state <phase> [goal]`          | Update the current phase and goal        |
+| `/snapshot <phase> [goal]`       | Update state and save handoff context    |
 | `/scan`                          | Detect project signals                   |
 | `/menu`                          | Numbered shortcuts                       |
 | `/help`                          | Show all commands                        |
@@ -89,6 +90,7 @@ flow ask "fix pagination bug"
 flow handoff codex "fix pagination bug"
 flow status
 flow state set --phase implement --goal "ship local assistant" --next "save context"
+flow snapshot --phase verify --goal "prepare handoff" --next "open another tool"
 flow doctor
 flow tools
 flow tools --json
@@ -139,6 +141,13 @@ flow state set --phase implement --goal "ship local assistant" --next "save cont
 
 Updates `.agentflow/state.yaml` so future handoffs and `flow context save`
 include the current goal and next action.
+
+```bash
+flow snapshot --phase verify --goal "prepare handoff" --next "open another tool"
+```
+
+Combines state update and context generation. Use it before switching from one
+AI coding tool to another.
 
 ## Global Skills
 

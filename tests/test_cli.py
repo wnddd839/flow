@@ -206,6 +206,33 @@ class CliTests(unittest.TestCase):
             self.assertIn('current_goal: "improve local workflow"', status.stdout)
             self.assertIn('next_action: "save context"', status.stdout)
 
+    def test_cli_snapshot_updates_state_and_writes_context(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "CLI Demo")
+
+            result = run_cli(
+                project_dir,
+                "snapshot",
+                "--phase",
+                "verify",
+                "--goal",
+                "prepare handoff",
+                "--next",
+                "open another tool",
+            )
+            status = run_cli(project_dir, "status")
+            context_file = project_dir / "FLOW_CONTEXT.md"
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Updated state", result.stdout)
+            self.assertIn("Saved context", result.stdout)
+            self.assertTrue(context_file.is_file())
+            self.assertIn('phase: "verify"', status.stdout)
+            self.assertIn('current_goal: "prepare handoff"', status.stdout)
+            self.assertIn('next_action: "open another tool"', status.stdout)
+            self.assertIn("prepare handoff", context_file.read_text(encoding="utf-8"))
+
     def test_cli_skills_import_list_and_sync(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

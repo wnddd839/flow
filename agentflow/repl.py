@@ -116,6 +116,7 @@ COMMAND_TABLE_DATA = [
     ("/home", "Show global skill home"),
     ("/status", "Show current state"),
     ("/state", "Update current phase, goal, or next action"),
+    ("/snapshot", "Update state and save context"),
     ("/scan", "Detect project signals"),
     ("/ask <request>", "Template helper: recommend workflow"),
     ("/handoff <agent> <req>", "Template helper: generate handoff prompt"),
@@ -540,6 +541,7 @@ def _print_commands() -> None:
             ("/editors", "Toggle which editors get an entrypoint"),
             ("/status", "Show current state"),
             ("/state <phase> <goal>", "Update current phase and goal"),
+            ("/snapshot <phase> <goal>", "Update state and save context"),
             ("/scan", "Detect project signals"),
         ],
         f"{BOX} Skill Management": [
@@ -838,6 +840,21 @@ def _handle_command(root: Path, line: str) -> bool:
             console.print(f"[{ERR}]{exc}[/]")
             return False
         console.print(f"[{OK}]Updated state:[/] phase={phase}")
+        return False
+
+    if command == "/snapshot":
+        if not args:
+            console.print(f"[{WARN}]Usage:[/] /snapshot <phase> [goal text]")
+            return False
+        phase = args[0]
+        goal = " ".join(args[1:]) if len(args) > 1 else None
+        try:
+            update_state(root, phase=phase, current_goal=goal)
+            result = save_context(root)
+        except FileNotFoundError as exc:
+            console.print(f"[{ERR}]{exc}[/]")
+            return False
+        console.print(f"[{OK}]Snapshot saved:[/] {result['path']}")
         return False
 
     if command == "/doctor":
