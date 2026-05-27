@@ -1,0 +1,434 @@
+"""Command-line interface for AgentFlow MVP."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from .core import (
+    doctor_project,
+    init_project,
+    recommend_route,
+    render_handoff_prompt,
+    scan_project,
+    to_json,
+)
+from .skills import (
+    bind_skill_root,
+    describe_skill_home,
+    discover_global_skills,
+    import_local_skill,
+    import_zip_skill,
+    install_all_skill_source,
+    install_github_skill,
+    install_npm_skill,
+    install_npx_skill_command,
+    install_skill_source,
+    sync_project_skill_index,
+)
+from .templates import AGENT_INSTRUCTIONS
+
+
+def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+
+    if not argv:
+        from .repl import run_repl
+
+        return run_repl(Path.cwd())
+
+    parser = argparse.ArgumentParser(
+        prog="flow",
+        description="Initialize and guide a lightweight AI coding workflow.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    init_parser = subparsers.add_parser("init", help="Create .agentflow workflow files.")
+    init_parser.add_argument("--name", default=None, help="Project display name.")
+    init_parser.add_argument("--force", action="store_true", help="Overwrite existing files.")
+    init_parser.add_argument(
+        "--editors",
+        default=None,
+        help="Comma-separated editor names to enable (codex,claude,cursor,kiro,qoder,antigravity).",
+    )
+    init_parser.add_argument(
+        "--no-link",
+        action="store_true",
+        help="Skip creating .agentflow/skills/_global link to the global skill folder.",
+    )
+    init_parser.add_argument("--api-key-env", default="AGENTFLOW_API_KEY")
+    init_parser.add_argument("--provider", default="openai-compatible")
+    init_parser.add_argument("--model", default="gpt-5.2")
+
+    subparsers.add_parser("scan", help="Print detected project signals.")
+
+    ask_parser = subparsers.add_parser("ask", help="Recommend a workflow for a request.")
+    ask_parser.add_argument("request", help="What you want to build or fix.")
+
+    handoff_parser = subparsers.add_parser("handoff", help="Generate a prompt for an agent.")
+    handoff_parser.add_argument("platform", help="codex, claude, cursor, kiro, qoder, ...")
+    handoff_parser.add_argument("request", help="What the target agent should work on.")
+
+    subparsers.add_parser("status", help="Print .agentflow/state.yaml.")
+    subparsers.add_parser("doctor", help="Check required workflow files.")
+    subparsers.add_parser("instructions", help="Show universal agent instructions.")
+    npx_parser = subparsers.add_parser("npx", help="Install from an npx skills add command.")
+    npx_parser.add_argument("args", nargs=argparse.REMAINDER)
+
+    skills_parser = subparsers.add_parser("skills", help="Manage global AgentFlow skills.")
+    skills_subparsers = skills_parser.add_subparsers(dest="skills_command", required=True)
+    skills_subparsers.add_parser("home", help="Show global skill home.")
+    bind_parser = skills_subparsers.add_parser("bind", help="Bind global skill root.")
+    bind_parser.add_argument("path")
+    skills_subparsers.add_parser("list", help="List installed global skills.")
+    import_parser = skills_subparsers.add_parser("import", help="Import a local skill folder.")
+    import_parser.add_argument("path")
+    install_parser = skills_subparsers.add_parser("install", help="Install a skill source.")
+    install_parser.add_argument("source", help="npm:<pkg>, gh:<repo>, zip:<path>, local:<path>")
+    npm_parser = skills_subparsers.add_parser("npm", help="Install from npm.")
+    npm_parser.add_argument("package")
+    gh_parser = skills_subparsers.add_parser("gh", help="Install from GitHub.")
+    gh_parser.add_argument("repo")
+    zip_parser = skills_subparsers.add_parser("zip", help="Import a zip skill package.")
+    zip_parser.add_argument("path")
+    npx_skills_parser = skills_subparsers.add_parser("npx", help="Install from npx skills add.")
+    npx_skills_parser.add_argument("args", nargs=argparse.REMAINDER)
+    all_parser = skills_subparsers.add_parser(
+        "all", help="Install every skill found in one or more sources."
+    )
+    all_parser.add_argument("sources", nargs="+")
+    skills_subparsers.add_parser("sync", help="Sync global skills into this project index.")
+
+    editors_parser = subparsers.add_parser("editors", help="Manage editor entrypoints.")
+    editors_subparsers = editors_parser.add_subparsers(dest="editors_command", required=True)
+    editors_subparsers.add_parser("list", help="Show editors and their enabled state.")
+    add_editor_parser = editors_subparsers.add_parser("add", help="Enable a known editor.")
+    add_editor_parser.add_argument("name")
+    remove_editor_parser = editors_subparsers.add_parser("remove", help="Disable an editor.")
+    remove_editor_parser.add_argument("name")
+    add_custom_parser = editors_subparsers.add_parser(
+        "add-custom", help="Register a custom editor entrypoint path."
+    )
+    add_custom_parser.add_argument("name")
+    add_custom_parser.add_argument("path")
+    add_custom_parser.add_argument("--display", default=None)
+    remove_custom_parser = editors_subparsers.add_parser(
+        "remove-custom", help="Remove a custom editor."
+    )
+    remove_custom_parser.add_argument("name")
+    apply_parser = editors_subparsers.add_parser(
+        "apply", help="Reconcile this project's editor entrypoints with the config."
+    )
+    apply_parser.add_argument("--force", action="store_true")
+
+    projects_parser = subparsers.add_parser("projects", help="Manage registered projects.")
+    projects_subparsers = projects_parser.add_subparsers(dest="projects_command", required=True)
+    projects_subparsers.add_parser("list", help="List registered projects.")
+    register_parser = projects_subparsers.add_parser("register", help="Register the current project.")
+    register_parser.add_argument("--name", default=None)
+    unregister_parser = projects_subparsers.add_parser(
+        "unregister", help="Unregister a project by name."
+    )
+    unregister_parser.add_argument("name")
+    projects_subparsers.add_parser(
+        "sync-all", help="Re-link the global skill folder and refresh the index in every registered project."
+    )
+
+    args = parser.parse_args(argv)
+    cwd = Path.cwd()
+
+    if args.command == "init":
+        editor_list: list[str] | None = None
+        if args.editors is not None:
+            editor_list = [item.strip() for item in args.editors.split(",") if item.strip()]
+        result = init_project(
+            cwd,
+            project_name=args.name,
+            editors=editor_list,
+            force=args.force,
+            api_key_env=args.api_key_env,
+            provider=args.provider,
+            model=args.model,
+            link_global_skills=not args.no_link,
+        )
+        print(f"Initialized AgentFlow in {cwd}")
+        print(f"Created: {len(result['created'])}")
+        print(f"Skipped: {len(result['skipped'])}")
+        if result.get("editors_removed"):
+            print(f"Cleared disabled editor folders: {', '.join(result['editors_removed'])}")
+        link = result.get("link") or {}
+        if link.get("method") == "absolute":
+            print("Note: created absolute fallback for global skills (symlink unavailable).")
+        elif link.get("method") in {"symlink", "junction"}:
+            print(f"Linked global skill folder via {link['method']}.")
+        return 0
+
+    if args.command == "scan":
+        print(to_json(scan_project(cwd)))
+        return 0
+
+    if args.command == "ask":
+        advice = recommend_route(args.request, scan_project(cwd))
+        print(f"Phase: {advice['phase']}")
+        print(f"Recommended workflow: {advice['workflow']}")
+        print(f"Recommended agent: {advice['recommended_agent']}")
+        print(f"Implementation allowed: {str(advice['implementation_allowed']).lower()}")
+        print(f"Required skills: {', '.join(advice['required_skills'])}")
+        print(f"Next artifacts: {', '.join(advice['next_artifacts'])}")
+        print(f"Reason: {advice['reason']}")
+        print()
+        print(
+            "Next: flow handoff "
+            f"{advice['recommended_agent']} \"{args.request}\""
+        )
+        return 0
+
+    if args.command == "handoff":
+        print(render_handoff_prompt(cwd, args.platform, args.request))
+        return 0
+
+    if args.command == "status":
+        state_path = cwd / ".agentflow" / "state.yaml"
+        if not state_path.exists():
+            print("No .agentflow/state.yaml found. Run `flow init` first.")
+            return 1
+        print(state_path.read_text(encoding="utf-8"))
+        return 0
+
+    if args.command == "doctor":
+        report = doctor_project(cwd)
+        if report["ok"]:
+            print("AgentFlow doctor: OK")
+            return 0
+        print("AgentFlow doctor: missing files")
+        for relative in report["missing"]:
+            print(f"- {relative}")
+        return 1
+
+    if args.command == "instructions":
+        state_path = cwd / ".agentflow" / "state.yaml"
+        if not state_path.exists():
+            print("Project not initialized. Run `flow init` first.")
+            return 1
+        print(AGENT_INSTRUCTIONS)
+        return 0
+
+    if args.command == "npx":
+        installed = install_npx_skill_command(args.args)
+        sync_project_skill_index(cwd)
+        _print_install_result(installed)
+        return 0
+
+    if args.command == "skills":
+        return _handle_skills_command(args, cwd)
+
+    if args.command == "editors":
+        return _handle_editors_command(args, cwd)
+
+    if args.command == "projects":
+        return _handle_projects_command(args, cwd)
+
+    parser.print_help()
+    return 1
+
+
+def _handle_skills_command(args: argparse.Namespace, cwd: Path) -> int:
+    if args.skills_command == "home":
+        info = describe_skill_home()
+        print(f"AgentFlow home: {info['home']}")
+        print("Skill roots:")
+        for root in info["skill_roots"]:
+            print(f"- {root}")
+        print(f"Installed skills: {len(info['skills'])}")
+        return 0
+
+    if args.skills_command == "bind":
+        root = bind_skill_root(args.path)
+        print(f"Bound global skill root: {root}")
+        return 0
+
+    if args.skills_command == "list":
+        skills = discover_global_skills()
+        if not skills:
+            print("No global skills installed.")
+            return 0
+        for skill in skills:
+            print(f"- {skill.name}: {skill.description}")
+            print(f"  {skill.path}")
+        return 0
+
+    if args.skills_command == "import":
+        skill = import_local_skill(args.path)
+        sync_project_skill_index(cwd)
+        _print_install_result(skill)
+        return 0
+
+    if args.skills_command == "install":
+        skill = install_skill_source(args.source)
+        sync_project_skill_index(cwd)
+        _print_install_result(skill)
+        return 0
+
+    if args.skills_command == "npm":
+        skill = install_npm_skill(args.package)
+        sync_project_skill_index(cwd)
+        _print_install_result(skill)
+        return 0
+
+    if args.skills_command == "gh":
+        skill = install_github_skill(args.repo)
+        sync_project_skill_index(cwd)
+        _print_install_result(skill)
+        return 0
+
+    if args.skills_command == "zip":
+        skill = import_zip_skill(args.path)
+        sync_project_skill_index(cwd)
+        _print_install_result(skill)
+        return 0
+
+    if args.skills_command == "npx":
+        installed = install_npx_skill_command(args.args)
+        sync_project_skill_index(cwd)
+        _print_install_result(installed)
+        return 0
+
+    if args.skills_command == "all":
+        installed = []
+        for source in args.sources:
+            installed.extend(install_all_skill_source(source))
+        sync_project_skill_index(cwd)
+        _print_install_result(installed)
+        return 0
+
+    if args.skills_command == "sync":
+        result = sync_project_skill_index(cwd)
+        print(f"Synced project index: {result['path']}")
+        print(f"Global skills: {result['synced']}")
+        return 0
+
+    return 1
+
+
+def _skill_list(installed) -> list:
+    if isinstance(installed, list):
+        return installed
+    return [installed]
+
+
+def _print_install_result(installed) -> None:
+    skills = _skill_list(installed)
+    if len(skills) == 1:
+        print(f"Installed skill: {skills[0].name}")
+    else:
+        print(f"Installed skills: {len(skills)}")
+    for skill in skills:
+        print(f"- {skill.name}: {skill.path.parent}")
+    print("Synced project index: .agentflow/skills/SKILL.md")
+
+
+def _handle_editors_command(args: argparse.Namespace, cwd: Path) -> int:
+    from .editors import (
+        all_editors,
+        add_custom_editor,
+        apply_editors,
+        disable_editor,
+        enable_editor,
+        get_enabled_editors,
+        remove_custom_editor,
+    )
+
+    if args.editors_command == "list":
+        catalog = all_editors()
+        enabled = {spec.name for spec in get_enabled_editors()}
+        for name in sorted(catalog):
+            spec = catalog[name]
+            mark = "[x]" if name in enabled else "[ ]"
+            tag = " (custom)" if spec.custom else ""
+            print(f"{mark} {name:<14}{tag} -> {spec.entrypoint}")
+        if not catalog:
+            print("No editors known. Run `flow editors add-custom` to register one.")
+        return 0
+
+    if args.editors_command == "add":
+        spec = enable_editor(args.name)
+        apply_editors(cwd)
+        print(f"Enabled editor: {spec.name} -> {spec.entrypoint}")
+        return 0
+
+    if args.editors_command == "remove":
+        disable_editor(args.name)
+        result = apply_editors(cwd)
+        print(f"Disabled editor: {args.name}")
+        if result["removed"]:
+            print(f"Removed folders: {', '.join(result['removed'])}")
+        return 0
+
+    if args.editors_command == "add-custom":
+        spec = add_custom_editor(args.name, args.path, display=args.display)
+        apply_editors(cwd)
+        print(f"Added custom editor: {spec.name} -> {spec.entrypoint}")
+        return 0
+
+    if args.editors_command == "remove-custom":
+        remove_custom_editor(args.name)
+        result = apply_editors(cwd)
+        print(f"Removed custom editor: {args.name}")
+        if result["removed"]:
+            print(f"Removed folders: {', '.join(result['removed'])}")
+        return 0
+
+    if args.editors_command == "apply":
+        result = apply_editors(cwd, force=args.force)
+        print(f"Created:  {len(result['created'])}")
+        print(f"Kept:     {len(result['kept'])}")
+        print(f"Removed:  {len(result['removed'])}")
+        return 0
+
+    return 1
+
+
+def _handle_projects_command(args: argparse.Namespace, cwd: Path) -> int:
+    from .projects import (
+        list_projects,
+        register_project,
+        sync_all_projects,
+        unregister_project,
+    )
+
+    if args.projects_command == "list":
+        entries = list_projects()
+        if not entries:
+            print("No projects registered.")
+            return 0
+        for entry in entries:
+            print(f"- {entry.name}: {entry.path}")
+        return 0
+
+    if args.projects_command == "register":
+        entry = register_project(cwd, name=args.name)
+        print(f"Registered project: {entry.name} -> {entry.path}")
+        return 0
+
+    if args.projects_command == "unregister":
+        if unregister_project(args.name):
+            print(f"Unregistered: {args.name}")
+            return 0
+        print(f"No project registered as: {args.name}")
+        return 1
+
+    if args.projects_command == "sync-all":
+        result = sync_all_projects()
+        for entry in result["results"]:
+            print(f"- {entry['name']} ({entry['link']['method']}): {entry['synced']} skills")
+        if result["skipped"]:
+            print(f"Skipped (no .agentflow): {', '.join(result['skipped'])}")
+        return 0
+
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentflow-mvp"
+version = "0.3.1"
+description = "Small local AI coding workflow initializer and handoff prompt generator"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = ["rich>=13.0.0", "prompt_toolkit>=3.0.0"]
+
+[project.scripts]
+agentflow = "agentflow.cli:main"
+flow = "agentflow.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
