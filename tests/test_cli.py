@@ -233,6 +233,28 @@ class CliTests(unittest.TestCase):
             self.assertIn('next_action: "open another tool"', status.stdout)
             self.assertIn("prepare handoff", context_file.read_text(encoding="utf-8"))
 
+    def test_cli_changes_new_creates_change_record(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "CLI Demo")
+
+            result = run_cli(
+                project_dir,
+                "changes",
+                "new",
+                "Improve Local Handoffs",
+                "--summary",
+                "Make context switching easier.",
+            )
+            status = run_cli(project_dir, "status")
+            readme = project_dir / ".agentflow" / "changes" / "improve-local-handoffs" / "README.md"
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Created change: improve-local-handoffs", result.stdout)
+            self.assertTrue(readme.is_file())
+            self.assertIn("Make context switching easier.", readme.read_text(encoding="utf-8"))
+            self.assertIn('active_change: "improve-local-handoffs"', status.stdout)
+
     def test_cli_skills_import_list_and_sync(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

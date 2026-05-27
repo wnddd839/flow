@@ -31,6 +31,7 @@ from .core import (
     to_json,
 )
 from .context import save_context
+from .changes import create_change
 from .diagnostics import detect_tools
 from .repair import apply_repair_plan, build_repair_plan
 from .state import update_state
@@ -117,6 +118,7 @@ COMMAND_TABLE_DATA = [
     ("/status", "Show current state"),
     ("/state", "Update current phase, goal, or next action"),
     ("/snapshot", "Update state and save context"),
+    ("/change", "Create a local change record"),
     ("/scan", "Detect project signals"),
     ("/ask <request>", "Template helper: recommend workflow"),
     ("/handoff <agent> <req>", "Template helper: generate handoff prompt"),
@@ -542,6 +544,7 @@ def _print_commands() -> None:
             ("/status", "Show current state"),
             ("/state <phase> <goal>", "Update current phase and goal"),
             ("/snapshot <phase> <goal>", "Update state and save context"),
+            ("/change <title>", "Create a local change record"),
             ("/scan", "Detect project signals"),
         ],
         f"{BOX} Skill Management": [
@@ -855,6 +858,20 @@ def _handle_command(root: Path, line: str) -> bool:
             console.print(f"[{ERR}]{exc}[/]")
             return False
         console.print(f"[{OK}]Snapshot saved:[/] {result['path']}")
+        return False
+
+    if command == "/change":
+        if not args:
+            console.print(f"[{WARN}]Usage:[/] /change <title>")
+            return False
+        title = " ".join(args)
+        try:
+            result = create_change(root, title=title)
+        except FileExistsError:
+            console.print(f"[{ERR}]Change already exists for:[/] {title}")
+            return False
+        console.print(f"[{OK}]Created change:[/] {result['id']}")
+        console.print(f"[{DIM}]{result['path']}[/]")
         return False
 
     if command == "/doctor":

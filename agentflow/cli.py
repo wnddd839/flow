@@ -16,6 +16,7 @@ from .core import (
     to_json,
 )
 from .context import save_context
+from .changes import create_change
 from .diagnostics import collect_diagnostics, detect_tools
 from .repair import apply_repair_plan, build_repair_plan
 from .state import update_state
@@ -86,6 +87,12 @@ def main(argv: list[str] | None = None) -> int:
     snapshot_parser.add_argument("--next", default=None, help="Next action.")
     snapshot_parser.add_argument("--blocked", choices=["true", "false"], default=None)
     snapshot_parser.add_argument("--output", default=None, help="Output path, default FLOW_CONTEXT.md.")
+    changes_parser = subparsers.add_parser("changes", help="Manage local AgentFlow change records.")
+    changes_subparsers = changes_parser.add_subparsers(dest="changes_command", required=True)
+    changes_new_parser = changes_subparsers.add_parser("new", help="Create a new change record.")
+    changes_new_parser.add_argument("title")
+    changes_new_parser.add_argument("--summary", default="")
+    changes_new_parser.add_argument("--id", default=None, help="Override the generated change id.")
 
     ask_parser = subparsers.add_parser("ask", help="Recommend a workflow for a request.")
     ask_parser.add_argument("request", help="What you want to build or fix.")
@@ -236,6 +243,19 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"- {key}: {updated[key]}")
         print(f"Saved context: {result['path']}")
         return 0
+
+    if args.command == "changes":
+        if args.changes_command == "new":
+            result = create_change(
+                cwd,
+                title=args.title,
+                summary=args.summary,
+                change_id=args.id,
+            )
+            print(f"Created change: {result['id']}")
+            print(f"Path: {result['path']}")
+            return 0
+        return 1
 
     if args.command == "ask":
         advice = recommend_route(args.request, scan_project(cwd))

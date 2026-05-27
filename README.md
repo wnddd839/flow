@@ -63,6 +63,7 @@ closest match.
 | `/status`                        | Show `.agentflow/state.yaml`             |
 | `/state <phase> [goal]`          | Update the current phase and goal        |
 | `/snapshot <phase> [goal]`       | Update state and save handoff context    |
+| `/change <title>`                | Create a local change record             |
 | `/scan`                          | Detect project signals                   |
 | `/menu`                          | Numbered shortcuts                       |
 | `/help`                          | Show all commands                        |
@@ -91,6 +92,7 @@ flow handoff codex "fix pagination bug"
 flow status
 flow state set --phase implement --goal "ship local assistant" --next "save context"
 flow snapshot --phase verify --goal "prepare handoff" --next "open another tool"
+flow changes new "Improve local handoffs" --summary "Make context switching easier."
 flow doctor
 flow tools
 flow tools --json
@@ -148,6 +150,14 @@ flow snapshot --phase verify --goal "prepare handoff" --next "open another tool"
 
 Combines state update and context generation. Use it before switching from one
 AI coding tool to another.
+
+```bash
+flow changes new "Improve local handoffs" --summary "Make context switching easier."
+```
+
+Creates `.agentflow/changes/<id>/README.md` and marks the change active in
+`.agentflow/state.yaml`. Use it for a lightweight, local task record before
+starting larger work.
 
 ## Global Skills
 

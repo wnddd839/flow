@@ -16,6 +16,7 @@ from agentflow.repair import apply_repair_plan, build_repair_plan
 from agentflow.context import render_context_markdown, save_context
 from agentflow.diagnostics import detect_tools
 from agentflow.state import load_state, update_state
+from agentflow.changes import create_change
 from agentflow.skills import (
     bind_skill_root,
     discover_global_skills,
@@ -290,6 +291,26 @@ class CoreTests(unittest.TestCase):
             loaded = load_state(project_dir)
             self.assertEqual(loaded["phase"], "implement")
             self.assertEqual(loaded["current_goal"], "ship local assistant")
+
+    def test_create_change_creates_change_folder_and_updates_state(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            init_project(project_dir, project_name="Demo")
+
+            result = create_change(
+                project_dir,
+                title="Improve Local Handoffs",
+                summary="Make context switching easier.",
+            )
+
+            readme = Path(result["path"]) / "README.md"
+            self.assertEqual(result["id"], "improve-local-handoffs")
+            self.assertTrue(readme.is_file())
+            content = readme.read_text(encoding="utf-8")
+            self.assertIn("# Improve Local Handoffs", content)
+            self.assertIn("Make context switching easier.", content)
+            state = load_state(project_dir)
+            self.assertEqual(state["active_change"], "improve-local-handoffs")
 
     def test_global_skill_import_and_sync_updates_project_index(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
