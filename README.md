@@ -1,4 +1,6 @@
-# AgentFlow MVP
+﻿# Flow
+
+慢慢完善的工作流。
 
 AgentFlow is a small local CLI for setting up a repeatable AI coding workflow in
 any project. It creates project rules, skill routing, state files, and handoff
