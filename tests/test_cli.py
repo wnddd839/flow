@@ -129,6 +129,45 @@ class CliTests(unittest.TestCase):
             self.assertIn("flow init", result.stdout)
             self.assertNotIn("agentflow init", result.stdout)
 
+    def test_cli_repair_dry_run_reports_missing_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "CLI Demo")
+            (project_dir / "AGENTS.md").unlink()
+
+            result = run_cli(project_dir, "repair", "--dry-run")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Repair plan", result.stdout)
+            self.assertIn("create AGENTS.md", result.stdout)
+            self.assertFalse((project_dir / "AGENTS.md").exists())
+
+    def test_cli_repair_restores_missing_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "CLI Demo")
+            (project_dir / "AGENTS.md").unlink()
+
+            result = run_cli(project_dir, "repair")
+            doctor = run_cli(project_dir, "doctor")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Created: 1", result.stdout)
+            self.assertEqual(doctor.returncode, 0, doctor.stdout + doctor.stderr)
+
+    def test_cli_context_save_writes_context_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "CLI Demo")
+
+            result = run_cli(project_dir, "context", "save")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Saved context:", result.stdout)
+            context_file = project_dir / "FLOW_CONTEXT.md"
+            self.assertTrue(context_file.is_file())
+            self.assertIn("# Flow Context", context_file.read_text(encoding="utf-8"))
+
     def test_cli_skills_import_list_and_sync(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -30,6 +30,8 @@ from .core import (
     scan_project,
     to_json,
 )
+from .context import save_context
+from .repair import apply_repair_plan, build_repair_plan
 from .skills import (
     bind_skill_root,
     describe_skill_home,
@@ -94,6 +96,8 @@ BLOCK_EMPTY = "□" if IS_UTF8 else "-"
 COMMAND_TABLE_DATA = [
     ("/init [name]", "Initialize AI coding framework"),
     ("/doctor", "Check project configuration"),
+    ("/repair", "Restore missing AgentFlow files"),
+    ("/context", "Save a no-API handoff snapshot"),
     ("/instructions", "Show universal agent instructions"),
     ("/editors", "Toggle which editors get an entrypoint"),
     ("/register", "Register this project for batch sync"),
@@ -525,6 +529,8 @@ def _print_commands() -> None:
         f"{GEAR} Setup & Diagnostics": [
             ("/init [name]", "Initialize AI coding framework"),
             ("/doctor", "Check project configuration"),
+            ("/repair", "Restore missing AgentFlow files"),
+            ("/context", "Save a no-API handoff snapshot"),
             ("/instructions", "Show universal agent instructions"),
             ("/editors", "Toggle which editors get an entrypoint"),
             ("/status", "Show current state"),
@@ -647,6 +653,29 @@ def _handle_command(root: Path, line: str) -> bool:
 
     if command == "/instructions":
         _wizard_instructions(root)
+        return False
+
+    if command == "/repair":
+        dry_run = "--dry-run" in args
+        plan = build_repair_plan(root)
+        if dry_run:
+            if not plan.actions:
+                console.print(f"[{OK}]Nothing to repair.[/]")
+                return False
+            console.print("[bold]Repair plan[/]")
+            for action in plan.actions:
+                console.print(f"  [{ACCENT}]create[/] {action.relative_path}")
+            return False
+        result = apply_repair_plan(plan)
+        console.print(f"[{OK}]Created:[/] {len(result['created'])}")
+        for relative in result["created"]:
+            console.print(f"  - {relative}")
+        return False
+
+    if command == "/context":
+        output = args[0] if args else None
+        result = save_context(root, output=output)
+        console.print(f"[{OK}]Saved context:[/] {result['path']}")
         return False
 
     if command == "/editors":

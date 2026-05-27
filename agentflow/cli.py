@@ -14,6 +14,9 @@ from .core import (
     scan_project,
     to_json,
 )
+from .context import save_context
+from .diagnostics import collect_diagnostics
+from .repair import apply_repair_plan, build_repair_plan
 from .skills import (
     bind_skill_root,
     describe_skill_home,
@@ -73,7 +76,14 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers.add_parser("status", help="Print .agentflow/state.yaml.")
     subparsers.add_parser("doctor", help="Check required workflow files.")
+    repair_parser = subparsers.add_parser("repair", help="Restore missing AgentFlow files.")
+    repair_parser.add_argument("--dry-run", action="store_true", help="Show the repair plan only.")
+    repair_parser.add_argument("--name", default=None, help="Project display name for recreated files.")
     subparsers.add_parser("instructions", help="Show universal agent instructions.")
+    context_parser = subparsers.add_parser("context", help="Create local handoff context snapshots.")
+    context_subparsers = context_parser.add_subparsers(dest="context_command", required=True)
+    context_save_parser = context_subparsers.add_parser("save", help="Write FLOW_CONTEXT.md.")
+    context_save_parser.add_argument("--output", default=None, help="Output path, default FLOW_CONTEXT.md.")
     npx_parser = subparsers.add_parser("npx", help="Install from an npx skills add command.")
     npx_parser.add_argument("args", nargs=argparse.REMAINDER)
 
@@ -201,11 +211,30 @@ def main(argv: list[str] | None = None) -> int:
         report = doctor_project(cwd)
         if report["ok"]:
             print("AgentFlow doctor: OK")
+        else:
+            print("AgentFlow doctor: missing files")
+            for relative in report["missing"]:
+                print(f"- {relative}")
+        _print_diagnostics(cwd)
+        return 0 if report["ok"] else 1
+
+    if args.command == "repair":
+        plan = build_repair_plan(cwd, project_name=args.name)
+        if args.dry_run:
+            print("Repair plan:")
+            if not plan.actions:
+                print("- nothing to repair")
+                return 0
+            for action in plan.actions:
+                print(f"- create {action.relative_path}")
             return 0
-        print("AgentFlow doctor: missing files")
-        for relative in report["missing"]:
+        result = apply_repair_plan(plan)
+        print(f"Created: {len(result['created'])}")
+        for relative in result["created"]:
             print(f"- {relative}")
-        return 1
+        if result["skipped"]:
+            print(f"Skipped: {len(result['skipped'])}")
+        return 0
 
     if args.command == "instructions":
         state_path = cwd / ".agentflow" / "state.yaml"
@@ -214,6 +243,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(AGENT_INSTRUCTIONS)
         return 0
+
+    if args.command == "context":
+        if args.context_command == "save":
+            result = save_context(cwd, output=args.output)
+            print(f"Saved context: {result['path']}")
+            return 0
+        return 1
 
     if args.command == "npx":
         installed = install_npx_skill_command(args.args)
@@ -232,6 +268,17 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.print_help()
     return 1
+
+
+def _print_diagnostics(cwd: Path) -> None:
+    print()
+    print("Local diagnostics:")
+    current_section = ""
+    for item in collect_diagnostics(cwd):
+        if item.section != current_section:
+            current_section = item.section
+            print(f"{current_section}:")
+        print(f"- [{item.status}] {item.name}: {item.message}")
 
 
 def _handle_skills_command(args: argparse.Namespace, cwd: Path) -> int:

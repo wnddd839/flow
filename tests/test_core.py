@@ -12,6 +12,8 @@ from agentflow.core import (
     render_handoff_prompt,
     scan_project,
 )
+from agentflow.repair import apply_repair_plan, build_repair_plan
+from agentflow.context import render_context_markdown, save_context
 from agentflow.skills import (
     bind_skill_root,
     discover_global_skills,
@@ -210,6 +212,51 @@ class CoreTests(unittest.TestCase):
             self.assertFalse(report["ok"])
             self.assertIn("AGENTS.md", report["missing"])
             self.assertNotIn(".agentflow/skills/SKILL.md", report["missing"])
+
+    def test_repair_plan_restores_missing_base_files_without_force(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            init_project(project_dir, project_name="Demo")
+            agents_path = project_dir / "AGENTS.md"
+            agents_path.unlink()
+
+            plan = build_repair_plan(project_dir, project_name="Demo")
+
+            self.assertEqual([action.relative_path for action in plan.actions], ["AGENTS.md"])
+            result = apply_repair_plan(plan)
+
+            self.assertEqual(result["created"], ["AGENTS.md"])
+            self.assertTrue(agents_path.is_file())
+            self.assertIn(".agentflow/interfaces/README.md", agents_path.read_text(encoding="utf-8"))
+            self.assertTrue(doctor_project(project_dir)["ok"])
+
+    def test_context_markdown_summarizes_project_state(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            init_project(project_dir, project_name="Demo")
+            (project_dir / "pyproject.toml").write_text(
+                "[project]\nname = 'demo'\n", encoding="utf-8"
+            )
+            (project_dir / "tests").mkdir()
+
+            content = render_context_markdown(project_dir)
+
+            self.assertIn("# Flow Context", content)
+            self.assertIn("## Project", content)
+            self.assertIn("python -m unittest discover -s tests", content)
+            self.assertIn("## AgentFlow State", content)
+
+    def test_save_context_writes_default_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            init_project(project_dir, project_name="Demo")
+
+            result = save_context(project_dir)
+
+            output = project_dir / "FLOW_CONTEXT.md"
+            self.assertEqual(result["path"], str(output))
+            self.assertTrue(output.is_file())
+            self.assertIn("# Flow Context", output.read_text(encoding="utf-8"))
 
     def test_global_skill_import_and_sync_updates_project_index(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

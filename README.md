@@ -44,6 +44,8 @@ closest match.
 | -------------------------------- | ---------------------------------------- |
 | `/init [name]`                   | Set up repeatable coding flow            |
 | `/doctor`                        | Check project configuration              |
+| `/repair`                        | Restore missing AgentFlow files          |
+| `/context`                       | Save a no-API handoff snapshot           |
 | `/instructions`                  | Show universal agent instructions        |
 | `/skills`                        | List global skills                       |
 | `skill all`                      | Batch install multiple skills            |
@@ -85,7 +87,38 @@ flow ask "fix pagination bug"
 flow handoff codex "fix pagination bug"
 flow status
 flow doctor
+flow repair --dry-run
+flow repair
+flow context save
 ```
+
+## Local Assistant Commands
+
+Flow is designed to solve local AI coding workflow pain without requiring a
+model API key.
+
+```bash
+flow doctor
+```
+
+Checks the AgentFlow project files and prints local tool availability for common
+AI coding CLIs such as Codex, Claude Code, Cursor, Kiro, Qoder, and Gemini.
+
+```bash
+flow repair --dry-run
+flow repair
+```
+
+Shows or applies a safe repair plan for missing AgentFlow-owned files. Repair
+only creates files that do not exist; it does not overwrite user content.
+
+```bash
+flow context save
+```
+
+Writes `FLOW_CONTEXT.md`, a portable handoff snapshot with project signals,
+verification candidates, git state, and `.agentflow/state.yaml`. Paste it into
+another coding tool when switching sessions.
 
 ## Global Skills
 
