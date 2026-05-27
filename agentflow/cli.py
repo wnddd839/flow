@@ -16,7 +16,7 @@ from .core import (
     to_json,
 )
 from .context import save_context
-from .changes import create_change
+from .changes import create_change, list_changes, show_change
 from .diagnostics import collect_diagnostics, detect_tools
 from .repair import apply_repair_plan, build_repair_plan
 from .state import update_state
@@ -93,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
     changes_new_parser.add_argument("title")
     changes_new_parser.add_argument("--summary", default="")
     changes_new_parser.add_argument("--id", default=None, help="Override the generated change id.")
+    changes_subparsers.add_parser("list", help="List local change records.")
+    changes_show_parser = changes_subparsers.add_parser("show", help="Show a local change record.")
+    changes_show_parser.add_argument("id", help="Change id or folder name.")
 
     ask_parser = subparsers.add_parser("ask", help="Recommend a workflow for a request.")
     ask_parser.add_argument("request", help="What you want to build or fix.")
@@ -254,6 +257,23 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Created change: {result['id']}")
             print(f"Path: {result['path']}")
+            return 0
+        if args.changes_command == "list":
+            changes = list_changes(cwd)
+            if not changes:
+                print("No change records found.")
+                return 0
+            for change in changes:
+                summary = f" - {change['summary']}" if change["summary"] else ""
+                print(f"- {change['id']}: {change['title']}{summary}")
+            return 0
+        if args.changes_command == "show":
+            try:
+                result = show_change(cwd, args.id)
+            except FileNotFoundError as error:
+                print(str(error))
+                return 1
+            print(result["content"], end="")
             return 0
         return 1
 

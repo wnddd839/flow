@@ -33,9 +33,66 @@ def create_change(
     return {"id": identifier, "path": str(change_dir)}
 
 
+def list_changes(project_dir: str | Path) -> list[dict[str, str]]:
+    """List local change records with lightweight README metadata."""
+
+    changes_dir = Path(project_dir) / ".agentflow" / "changes"
+    if not changes_dir.is_dir():
+        return []
+
+    changes: list[dict[str, str]] = []
+    for change_dir in sorted(changes_dir.iterdir(), key=lambda path: path.name):
+        readme = change_dir / "README.md"
+        if not change_dir.is_dir() or not readme.is_file():
+            continue
+        content = readme.read_text(encoding="utf-8")
+        changes.append(
+            {
+                "id": change_dir.name,
+                "path": str(change_dir),
+                "title": _readme_title(content) or change_dir.name,
+                "summary": _readme_summary(content),
+            }
+        )
+    return changes
+
+
+def show_change(project_dir: str | Path, change_id: str) -> dict[str, str]:
+    """Read one local change record."""
+
+    change_dir = Path(project_dir) / ".agentflow" / "changes" / change_id
+    readme = change_dir / "README.md"
+    if not readme.is_file():
+        raise FileNotFoundError(f"No change record found: {change_id}")
+    return {
+        "id": change_id,
+        "path": str(change_dir),
+        "content": readme.read_text(encoding="utf-8"),
+    }
+
+
 def _slug(value: str) -> str:
     slug = re.sub(r"[^a-zA-Z0-9]+", "-", value.strip().lower()).strip("-")
     return slug or "change"
+
+
+def _readme_title(content: str) -> str:
+    for line in content.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    return ""
+
+
+def _readme_summary(content: str) -> str:
+    lines = content.splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() != "## Summary":
+            continue
+        for summary_line in lines[index + 1 :]:
+            summary = summary_line.strip()
+            if summary:
+                return summary
+    return ""
 
 
 def _change_readme(title: str, summary: str) -> str:

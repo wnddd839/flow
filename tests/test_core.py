@@ -16,7 +16,7 @@ from agentflow.repair import apply_repair_plan, build_repair_plan
 from agentflow.context import render_context_markdown, save_context
 from agentflow.diagnostics import detect_tools
 from agentflow.state import load_state, update_state
-from agentflow.changes import create_change
+from agentflow.changes import create_change, list_changes, show_change
 from agentflow.skills import (
     bind_skill_root,
     discover_global_skills,
@@ -311,6 +311,20 @@ class CoreTests(unittest.TestCase):
             self.assertIn("Make context switching easier.", content)
             state = load_state(project_dir)
             self.assertEqual(state["active_change"], "improve-local-handoffs")
+
+    def test_list_and_show_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            init_project(project_dir, project_name="Demo")
+            create_change(project_dir, title="First Change", summary="Alpha")
+            create_change(project_dir, title="Second Change", summary="Beta")
+
+            changes = list_changes(project_dir)
+            shown = show_change(project_dir, "first-change")
+
+            self.assertEqual([item["id"] for item in changes], ["first-change", "second-change"])
+            self.assertIn("# First Change", shown["content"])
+            self.assertIn("Alpha", shown["content"])
 
     def test_global_skill_import_and_sync_updates_project_index(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

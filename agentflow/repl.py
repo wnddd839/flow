@@ -31,7 +31,7 @@ from .core import (
     to_json,
 )
 from .context import save_context
-from .changes import create_change
+from .changes import create_change, list_changes, show_change
 from .diagnostics import detect_tools
 from .repair import apply_repair_plan, build_repair_plan
 from .state import update_state
@@ -119,6 +119,8 @@ COMMAND_TABLE_DATA = [
     ("/state", "Update current phase, goal, or next action"),
     ("/snapshot", "Update state and save context"),
     ("/change", "Create a local change record"),
+    ("/changes", "List local change records"),
+    ("/change-show <id>", "Show a local change record"),
     ("/scan", "Detect project signals"),
     ("/ask <request>", "Template helper: recommend workflow"),
     ("/handoff <agent> <req>", "Template helper: generate handoff prompt"),
@@ -545,6 +547,8 @@ def _print_commands() -> None:
             ("/state <phase> <goal>", "Update current phase and goal"),
             ("/snapshot <phase> <goal>", "Update state and save context"),
             ("/change <title>", "Create a local change record"),
+            ("/changes", "List local change records"),
+            ("/change-show <id>", "Show a local change record"),
             ("/scan", "Detect project signals"),
         ],
         f"{BOX} Skill Management": [
@@ -874,6 +878,17 @@ def _handle_command(root: Path, line: str) -> bool:
         console.print(f"[{DIM}]{result['path']}[/]")
         return False
 
+    if command == "/changes":
+        _print_change_list(root)
+        return False
+
+    if command == "/change-show":
+        if not args:
+            console.print(f"[{WARN}]Usage:[/] /change-show <id>")
+            return False
+        _print_change_detail(root, args[0])
+        return False
+
     if command == "/doctor":
         _print_doctor(root)
         return False
@@ -884,6 +899,47 @@ def _handle_command(root: Path, line: str) -> bool:
         console.print(f"[{DIM}]Did you mean[/] [bold {ACCENT}]{suggestion}[/][{DIM}]?[/]")
     console.print(f"[{DIM}]Type /help for available commands.[/]")
     return False
+
+
+# -- /changes -----------------------------------------------------------------
+
+def _print_change_list(root: Path) -> None:
+    changes = list_changes(root)
+    if not changes:
+        console.print(f"[{WARN}]No change records found.[/]")
+        console.print(f"[{DIM}]Try: /change Improve local handoffs[/]")
+        return
+
+    table = Table(show_header=True, header_style="bold", expand=True)
+    table.add_column("ID", style=f"bold {ACCENT}", no_wrap=True)
+    table.add_column("Title", style="bold white")
+    table.add_column("Summary", style=DIM)
+    for change in changes:
+        table.add_row(change["id"], change["title"], change["summary"])
+
+    console.print(Panel(
+        table,
+        title="[bold]Local Changes[/]",
+        title_align="left",
+        border_style=ACCENT,
+        padding=(1, 2),
+    ))
+
+
+def _print_change_detail(root: Path, change_id: str) -> None:
+    try:
+        result = show_change(root, change_id)
+    except FileNotFoundError as exc:
+        console.print(f"[{ERR}]{exc}[/]")
+        return
+
+    console.print(Panel(
+        result["content"].rstrip(),
+        title=f"[bold]Change -> {result['id']}[/]",
+        title_align="left",
+        border_style=ACCENT,
+        padding=(1, 2),
+    ))
 
 
 # -- /doctor ------------------------------------------------------------------

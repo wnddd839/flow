@@ -255,6 +255,24 @@ class CliTests(unittest.TestCase):
             self.assertIn("Make context switching easier.", readme.read_text(encoding="utf-8"))
             self.assertIn('active_change: "improve-local-handoffs"', status.stdout)
 
+    def test_cli_changes_list_and_show_records(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "CLI Demo")
+            run_cli(project_dir, "changes", "new", "First Change", "--summary", "Alpha")
+            run_cli(project_dir, "changes", "new", "Second Change", "--summary", "Beta")
+
+            list_result = run_cli(project_dir, "changes", "list")
+            show_result = run_cli(project_dir, "changes", "show", "first-change")
+
+            self.assertEqual(list_result.returncode, 0, list_result.stderr)
+            self.assertIn("first-change", list_result.stdout)
+            self.assertIn("First Change", list_result.stdout)
+            self.assertIn("second-change", list_result.stdout)
+            self.assertEqual(show_result.returncode, 0, show_result.stderr)
+            self.assertIn("# First Change", show_result.stdout)
+            self.assertIn("Alpha", show_result.stdout)
+
     def test_cli_skills_import_list_and_sync(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -587,6 +605,24 @@ class CliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Handoff for Codex", result.stdout)
             self.assertIn("fix pagination bug", result.stdout)
+
+    def test_interactive_changes_list_and_show(self) -> None:
+        """/changes and /change-show display local change records."""
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "Test")
+            run_cli(project_dir, "changes", "new", "First Change", "--summary", "Alpha")
+
+            result = run_cli(
+                project_dir,
+                input_text="/changes\n/change-show first-change\n/quit\n",
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("first-change", result.stdout)
+            self.assertIn("First Change", result.stdout)
+            self.assertIn("# First Change", result.stdout)
+            self.assertIn("Alpha", result.stdout)
 
     # -- /doctor in REPL ------------------------------------------------------
 
