@@ -170,6 +170,30 @@ AGENTS.md
 - [prompt_toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit) >= 3.0.0
   (interactive slash-command prompt and history)
 
+## Development
+
+Create a local environment and install the project with test dependencies:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install -e ".[dev]"
+```
+
+Run the verification checks:
+
+```bash
+python -m compileall -f agentflow tests
+python -m pytest -q
+```
+
+If `pytest` is not available in the active environment, the test suite can also
+run through the standard library:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 ## API Key
 
 The MVP is offline by default. `flow init` writes `.agentflow/config.yaml`

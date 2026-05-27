@@ -197,8 +197,10 @@ def _status_footer_text(root: Path) -> tuple[str, str]:
         n_skills = 0
     n_missing = len(report["missing"])
 
-    if not report["ok"] or phase == "not initialized":
+    if phase == "not initialized":
         left = f" {STAR} [bold #ef4444]not initialized[/]  [dim #94a3b8](run /init to setup your workflow)[/]"
+    elif not report["ok"]:
+        left = f" {STAR} [bold #f59e0b]needs attention[/]  [dim #94a3b8](run /doctor to inspect missing files)[/]"
     else:
         left = f" {STAR} [bold #10b981]ready[/]  [dim #94a3b8](type /help to list commands, or type a task)[/]"
 

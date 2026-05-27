@@ -320,6 +320,19 @@ class CliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("/doctor", result.stdout)
 
+    def test_dashboard_distinguishes_initialized_with_missing_files(self) -> None:
+        """Missing files in an initialized project should not read as uninitialized."""
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            run_cli(project_dir, "init", "--name", "Test")
+            (project_dir / "AGENTS.md").unlink()
+
+            result = run_cli(project_dir, input_text="0\n")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("needs attention", result.stdout)
+            self.assertNotIn("not initialized  (run /init", result.stdout)
+
     # -- /help tests ----------------------------------------------------------
 
     def test_help_shows_full_command_table(self) -> None:

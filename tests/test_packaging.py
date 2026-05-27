@@ -12,10 +12,12 @@ class PackagingTests(unittest.TestCase):
 
         scripts = data["project"]["scripts"]
         dependencies = data["project"]["dependencies"]
+        optional_dependencies = data["project"]["optional-dependencies"]
 
         self.assertEqual(scripts["agentflow"], "agentflow.cli:main")
         self.assertEqual(scripts["flow"], "agentflow.cli:main")
         self.assertIn("prompt_toolkit>=3.0.0", dependencies)
+        self.assertIn("pytest>=8.0.0", optional_dependencies["dev"])
 
 
 if __name__ == "__main__":

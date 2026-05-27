@@ -152,6 +152,8 @@ def scan_project(project_dir: str | Path) -> dict[str, list[str] | int]:
     if (root / "pyproject.toml").exists() or (root / "requirements.txt").exists():
         project_types.append("python")
         test_commands.append("python -m pytest")
+        if (root / "tests").is_dir():
+            test_commands.append("python -m unittest discover -s tests")
 
     if (root / "package.json").exists():
         project_types.append("node")

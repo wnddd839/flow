@@ -143,6 +143,19 @@ class CoreTests(unittest.TestCase):
             self.assertIn("npm test", result["test_commands"])
             self.assertEqual(result["docs"], ["README.md"])
 
+    def test_scan_project_suggests_unittest_when_tests_dir_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            (project_dir / "pyproject.toml").write_text(
+                "[project]\nname = 'demo'\n", encoding="utf-8"
+            )
+            (project_dir / "tests").mkdir()
+
+            result = scan_project(project_dir)
+
+            self.assertIn("python -m pytest", result["test_commands"])
+            self.assertIn("python -m unittest discover -s tests", result["test_commands"])
+
     def test_recommend_route_for_project_start_prefers_spec_first(self) -> None:
         advice = recommend_route("我要从零开始做一个 AI coding 工作流工具")
 
