@@ -98,7 +98,8 @@ BLOCK_EMPTY = "□" if IS_UTF8 else "-"
 
 COMMAND_TABLE_DATA = [
     ("/init [name]", "Initialize AI coding framework"),
-    ("/doctor", "Check project configuration"),
+    ("/check", "Health check (alias: /doctor)"),
+    ("/doctor", "Same as /check (legacy name)"),
     ("/tools", "Show local AI coding tools"),
     ("/repair", "Restore missing AgentFlow files"),
     ("/context", "Save a no-API handoff snapshot"),
@@ -352,7 +353,7 @@ def _print_banner(root: Path) -> None:
     status_table.add_row("  Phase", f"[{phase_style}]{phase}[/]")
 
     if doctor_ok:
-        status_table.add_row("  Doctor", f"[bold #10b981]{GREEN_DOT} All checks passed[/]")
+        status_table.add_row("  Doctor", f"[bold #10b981]{GREEN_DOT} OK[/]")
     else:
         n = len(report["missing"])
         status_table.add_row("  Doctor", f"[bold #f59e0b]{YELLOW_DOT} {n} missing file{'s' if n != 1 else ''}[/]")
@@ -497,7 +498,7 @@ def _wizard_setup(root: Path) -> None:
     # Show doctor result
     report = doctor_project(root)
     if report["ok"]:
-        console.print(f"  [{OK}]Doctor: All checks passed[/]")
+        console.print(f"  [{OK}]Doctor: OK[/]")
     else:
         n = len(report["missing"])
         console.print(f"  [{WARN}]Doctor: {n} file{'s' if n != 1 else ''} still missing[/]")
@@ -889,7 +890,7 @@ def _handle_command(root: Path, line: str) -> bool:
         _print_change_detail(root, args[0])
         return False
 
-    if command == "/doctor":
+    if command in {"/doctor", "/check"}:
         _print_doctor(root)
         return False
 
@@ -988,19 +989,20 @@ def _print_doctor(root: Path) -> None:
     for relative in report["checked"]:
         desc = get_desc(relative)
         if relative in missing_set:
-            status_text = f"{RED_DOT} [bold #ef4444]{CROSS} Missing[/]"
+            # Data-layer word "Missing" + icon, so output and status agree.
+            status_text = f"{RED_DOT} {CROSS} [bold #ef4444]Missing[/]"
             table.add_row(f"[dim]{relative}[/]", status_text, f"[dim]{desc}[/]")
         else:
-            status_text = f"{GREEN_DOT} [bold #10b981]{TICK} Healthy[/]"
+            status_text = f"{GREEN_DOT} {TICK} [bold #10b981]OK[/]"
             table.add_row(relative, status_text, desc)
 
     if report["ok"]:
         title_style = "#10b981"
-        title = f"{DOCTOR} [bold #10b981]Doctor Diagnostic -- All Checks Passed Successfully[/] {DOCTOR}"
+        title = f"{DOCTOR} [bold #10b981]Doctor — All OK[/]"
     else:
         title_style = "#f59e0b"
         n = len(report["missing"])
-        title = f"{DOCTOR} [bold #f59e0b]Doctor Diagnostic -- {n} Issue{'s' if n != 1 else ''} Detected[/] {DOCTOR}"
+        title = f"{DOCTOR} [bold #f59e0b]Doctor — {n} Missing[/]"
 
     console.print(Panel(
         table,

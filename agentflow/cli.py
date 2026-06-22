@@ -105,7 +105,8 @@ def main(argv: list[str] | None = None) -> int:
     handoff_parser.add_argument("request", help="What the target agent should work on.")
 
     subparsers.add_parser("status", help="Print .agentflow/state.yaml.")
-    subparsers.add_parser("doctor", help="Check required workflow files.")
+    subparsers.add_parser("doctor", help="Check required workflow files (alias: check).")
+    subparsers.add_parser("check", help="Alias for doctor.")
     repair_parser = subparsers.add_parser("repair", help="Restore missing AgentFlow files.")
     repair_parser.add_argument("--dry-run", action="store_true", help="Show the repair plan only.")
     repair_parser.add_argument("--name", default=None, help="Project display name for recreated files.")
@@ -305,12 +306,13 @@ def main(argv: list[str] | None = None) -> int:
         print(state_path.read_text(encoding="utf-8"))
         return 0
 
-    if args.command == "doctor":
+    if args.command in {"doctor", "check"}:
         report = doctor_project(cwd)
+        label = "check" if args.command == "check" else "doctor"
         if report["ok"]:
-            print("AgentFlow doctor: OK")
+            print(f"AgentFlow {label}: OK")
         else:
-            print("AgentFlow doctor: missing files")
+            print(f"AgentFlow {label}: missing files")
             for relative in report["missing"]:
                 print(f"- {relative}")
         _print_diagnostics(cwd)
