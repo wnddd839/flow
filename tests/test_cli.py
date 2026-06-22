@@ -66,6 +66,42 @@ class CliTests(unittest.TestCase):
             self.assertIn("AgentFlow", content)
             self.assertIn("source of truth", content)
 
+    def test_cli_setup_in_non_tty_cancels_cleanly(self) -> None:
+        """flow setup without a TTY cancels instead of crashing."""
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            result = run_cli(project_dir, "setup")
+
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn("Setup cancelled.", result.stdout)
+            # Nothing should be written when cancelled.
+            self.assertFalse((project_dir / ".agentflow").exists())
+
+    def test_cli_bare_init_routes_to_setup_picker(self) -> None:
+        """Bare `flow init` (no flags) routes through the setup picker.
+
+        In a non-TTY subprocess this must cancel cleanly rather than run a
+        silent non-interactive init -- this is what makes /init and /setup a
+        single primary entry point.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            result = run_cli(project_dir, "init")
+
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn("Setup cancelled.", result.stdout)
+            self.assertFalse((project_dir / ".agentflow").exists())
+
+    def test_cli_init_with_name_stays_non_interactive(self) -> None:
+        """`flow init --name X` keeps the original non-interactive behavior."""
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            result = run_cli(project_dir, "init", "--name", "Scripted")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Initialized AgentFlow", result.stdout)
+            self.assertTrue((project_dir / ".agentflow" / "constitution.md").is_file())
+
     def test_cli_ask_outputs_route_advice(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             project_dir = Path(directory)
@@ -475,7 +511,7 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("needs attention", result.stdout)
-            self.assertNotIn("not initialized  (run /init", result.stdout)
+            self.assertNotIn("not initialized  (run /setup", result.stdout)
 
     # -- /help tests ----------------------------------------------------------
 

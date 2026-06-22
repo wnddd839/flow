@@ -214,7 +214,7 @@ def _status_footer_text(root: Path) -> tuple[str, str]:
     n_missing = len(report["missing"])
 
     if phase == "not initialized":
-        left = f" {STAR} [bold #ef4444]not initialized[/]  [dim #94a3b8](run /init to setup your workflow)[/]"
+        left = f" {STAR} [bold #ef4444]not initialized[/]  [dim #94a3b8](run /setup to pick agents and initialize)[/]"
     elif not report["ok"]:
         left = f" {STAR} [bold #f59e0b]needs attention[/]  [dim #94a3b8](run /doctor to inspect missing files)[/]"
     else:
@@ -516,7 +516,7 @@ def _wizard_instructions(root: Path) -> None:
     """Show universal agent instructions."""
     state_path = root / ".agentflow" / "state.yaml"
     if not state_path.exists():
-        console.print(f"  [{WARN}]Project not initialized. Run /init or press 1 first.[/]")
+        console.print(f"  [{WARN}]Project not initialized. Run /setup first.[/]")
         console.print()
         return
 
@@ -661,6 +661,10 @@ def _handle_command(root: Path, line: str) -> bool:
         return False
 
     if command == "/init":
+        if not args:
+            # Bare /init is the primary interactive entry point now.
+            _quick_setup(root)
+            return False
         name = " ".join(args) if args else root.name
         result = init_project(root, project_name=name)
         console.print(Panel(

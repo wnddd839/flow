@@ -149,6 +149,10 @@ Use arrow keys to move, Space to toggle, Enter to confirm. The dialog pre-checks
 your currently enabled editors, so adding one more (e.g. Qoder) is a single
 Space press. This combines `/editors` and `/init` into one flow.
 
+Note: your selection replaces the global enabled-agent list in
+`~/.agentflow/editors.yaml` -- unchecking an agent disables it for every
+project, not just this one. Bare `flow init` opens the same dialog.
+
 In the REPL, the same dialog is available as `/setup`.
 
 ## Local Assistant Commands
@@ -326,7 +330,9 @@ the current commands do not require or read a secret.
 
 ## Workflow
 
-1. Run `flow init` once per project.
+1. Run `flow init` once per project. Bare `flow init` opens the agent picker;
+   `flow init --name "X"` skips the picker and uses your current selection.
+   `flow setup` is an explicit alias for the picker.
 2. Run `flow ask "<request>"` when you are unsure where a task belongs.
 3. Run `flow handoff <platform> "<request>"`.
 4. Paste the prompt into your chosen AI coding tool.

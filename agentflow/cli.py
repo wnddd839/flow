@@ -218,6 +218,13 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_init(args: argparse.Namespace, cwd: Path) -> int:
+    # Bare `flow init` (no name/editors/force/no-link) is the interactive path:
+    # route it through the one-shot agent picker so there is a single primary
+    # entry point. Any explicit flag keeps the original non-interactive behavior
+    # for scripts and CI.
+    if _init_is_bare(args):
+        return _cmd_setup(args, cwd)
+
     editor_list: list[str] | None = None
     if args.editors is not None:
         editor_list = [item.strip() for item in args.editors.split(",") if item.strip()]
@@ -242,6 +249,17 @@ def _cmd_init(args: argparse.Namespace, cwd: Path) -> int:
     elif link.get("method") in {"symlink", "junction"}:
         print(f"Linked global skill folder via {link['method']}.")
     return 0
+
+
+def _init_is_bare(args: argparse.Namespace) -> bool:
+    """True when ``flow init`` was invoked with no customization flags."""
+
+    return (
+        getattr(args, "name", None) is None
+        and getattr(args, "editors", None) is None
+        and not getattr(args, "force", False)
+        and not getattr(args, "no_link", False)
+    )
 
 
 def _cmd_setup(args: argparse.Namespace, cwd: Path) -> int:

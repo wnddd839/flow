@@ -140,7 +140,10 @@ def pick_editors_interactive(
 
     result = checkboxlist_dialog(
         title="AgentFlow Setup",
-        text="Select agents to set up for this project.  (Space toggles, Enter confirms)",
+        text=(
+            "Select agents to set up. Checked agents become your global default; "
+            "unchecking one disables it everywhere. (Space toggles, Enter confirms)"
+        ),
         values=values,
         default_values=[name for name in ordered_names if name in default_set],
         ok_text="Initialize",
