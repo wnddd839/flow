@@ -40,36 +40,65 @@ closest match.
 
 ## Interactive Commands
 
-| Command                          | Description                              |
-| -------------------------------- | ---------------------------------------- |
-| `/init [name]`                   | Set up repeatable coding flow            |
-| `/doctor`                        | Check project configuration              |
-| `/tools`                         | Show local AI coding tool availability   |
-| `/repair`                        | Restore missing AgentFlow files          |
-| `/context`                       | Save a no-API handoff snapshot           |
-| `/instructions`                  | Show universal agent instructions        |
-| `/skills`                        | List global skills                       |
-| `skill all`                      | Batch install multiple skills            |
-| `/sync`                          | Sync global skills into this project     |
-| `/npm <package>`                 | Install a skill from npm                 |
-| `/npx skills add <src> --skill <name>` | Install one skill from an npx command |
-| `/npx skills add <src> --all`    | Install every skill found in a source    |
-| `/gh <owner/repo>`               | Install a skill from GitHub              |
-| `/local <path>`                  | Import a local skill folder              |
-| `/zip <path>`                    | Import a zipped skill package            |
-| `/home`                          | Show global skill home                   |
-| `/ask <request>`                 | Legacy template helper                   |
-| `/handoff <agent> <request>`     | Legacy handoff prompt helper             |
-| `/status`                        | Show `.agentflow/state.yaml`             |
-| `/state <phase> [goal]`          | Update the current phase and goal        |
-| `/snapshot <phase> [goal]`       | Update state and save handoff context    |
-| `/change <title>`                | Create a local change record             |
-| `/changes`                       | List local change records                |
-| `/change-show <id>`              | Show a local change record               |
-| `/scan`                          | Detect project signals                   |
-| `/menu`                          | Numbered shortcuts                       |
-| `/help`                          | Show all commands                        |
-| `/quit`                          | Exit                                     |
+### Getting Started
+
+| Command           | Description                            |
+| ----------------- | -------------------------------------- |
+| `/setup`          | Pick agents and initialize in one step |
+| `/init [name]`    | Initialize, keep current agent selection |
+| `/check`          | Health check (alias: `/doctor`)        |
+| `/instructions`   | Show universal agent instructions      |
+
+### Project Configuration
+
+| Command        | Description                              |
+| -------------- | ---------------------------------------- |
+| `/editors`     | Toggle which editors get an entrypoint   |
+| `/tools`       | Show local AI coding tool availability   |
+| `/repair`      | Restore missing AgentFlow files          |
+| `/scan`        | Detect project signals                   |
+| `/context`     | Save a no-API handoff snapshot           |
+
+### Session State
+
+| Command                  | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `/status`                | Show `.agentflow/state.yaml`             |
+| `/state <phase> [goal]`  | Update the current phase and goal        |
+| `/snapshot <phase> [goal]` | Update state and save handoff context  |
+| `/change <title>`        | Create a local change record             |
+| `/changes`               | List local change records                |
+| `/change-show <id>`      | Show a local change record               |
+
+### Skills
+
+| Command                                 | Description                            |
+| --------------------------------------- | -------------------------------------- |
+| `/skills`                               | List global skills                     |
+| `/skills all`                           | Batch install multiple skills          |
+| `/sync`                                 | Sync global skills into this project   |
+| `/npm <package>`                        | Install a skill from npm               |
+| `/npx skills add <src> --skill <name>`  | Install one skill from an npx command  |
+| `/npx skills add <src> --all`           | Install every skill found in a source  |
+| `/gh <owner/repo>`                      | Install a skill from GitHub            |
+| `/local <path>`                         | Import a local skill folder            |
+| `/zip <path>`                           | Import a zipped skill package          |
+| `/home`                                 | Show global skill home                 |
+
+### Workflow Helpers
+
+| Command                       | Description                     |
+| ----------------------------- | ------------------------------- |
+| `/ask <request>`              | Recommend a workflow for a task |
+| `/handoff <agent> <request>`  | Generate a handoff prompt       |
+
+### System
+
+| Command | Description                 |
+| ------- | --------------------------- |
+| `/menu` | Numbered shortcuts          |
+| `/help` | Show all commands           |
+| `/quit` | Exit                        |
 
 Numbered shortcuts still work for compatibility: `1` setup, `2` check,
 `3` instructions, `0` quit.
@@ -80,6 +109,7 @@ Run commands directly without entering the interactive shell:
 
 ```bash
 flow init --name "My Project"
+flow setup
 flow instructions
 flow skills bind "C:\Users\27297\.agentflow\skills"
 flow skills import "D:\Downloads\my-skill"
@@ -98,12 +128,28 @@ flow changes new "Improve local handoffs" --summary "Make context switching easi
 flow changes list
 flow changes show improve-local-handoffs
 flow doctor
+flow check
 flow tools
 flow tools --json
 flow repair --dry-run
 flow repair
 flow context save
 ```
+
+## Quick Setup
+
+```bash
+flow setup
+```
+
+Opens a full-screen multiselect dialog where you tick the AI coding agents to
+support (Codex, Claude Code, Cursor, Kiro, Qoder, Antigravity, plus any custom
+editors), then initializes the project for the chosen set in a single step.
+Use arrow keys to move, Space to toggle, Enter to confirm. The dialog pre-checks
+your currently enabled editors, so adding one more (e.g. Qoder) is a single
+Space press. This combines `/editors` and `/init` into one flow.
+
+In the REPL, the same dialog is available as `/setup`.
 
 ## Local Assistant Commands
 

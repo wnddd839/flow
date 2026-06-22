@@ -47,6 +47,7 @@ from .skills import (
     install_npx_skill_command,
     sync_project_skill_index,
 )
+from .quick_setup import run_quick_setup
 from .templates import AGENT_INSTRUCTIONS
 # -- Premium Colour Palette ---------------------------------------------------
 
@@ -98,6 +99,7 @@ BLOCK_EMPTY = "□" if IS_UTF8 else "-"
 
 COMMAND_TABLE_DATA = [
     ("/init [name]", "Initialize AI coding framework"),
+    ("/setup", "Pick agents and initialize in one step"),
     ("/check", "Health check (alias: /doctor)"),
     ("/doctor", "Same as /check (legacy name)"),
     ("/tools", "Show local AI coding tools"),
@@ -413,7 +415,7 @@ def _print_banner(root: Path) -> None:
     # 5. Print gorgeous highlighted pills/badges
     hint_text = Text()
     hint_text.append(f"  {STAR} Quick Commands: ", style="dim #94a3b8")
-    hint_parts = ["/init", "/doctor", "/skills", "/sync", "/npm", "/npx", "/local", "/instructions", "/help"]
+    hint_parts = ["/setup", "/init", "/check", "/skills", "/sync", "/npm", "/npx", "/local", "/instructions", "/help"]
     for index, part in enumerate(hint_parts):
         if index:
             hint_text.append(" ")
@@ -536,23 +538,28 @@ def _print_commands() -> None:
     from rich import box
     
     categories = {
-        f"{GEAR} Setup & Diagnostics": [
-            ("/init [name]", "Initialize AI coding framework"),
-            ("/doctor", "Check project configuration"),
+        f"{ROCKET} Getting Started": [
+            ("/setup", "Pick agents + initialize (one step)"),
+            ("/init [name]", "Initialize, keep current agent selection"),
+            ("/check", "Health check (alias: /doctor)"),
+            ("/instructions", "Show universal agent instructions"),
+        ],
+        f"{GEAR} Project Configuration": [
+            ("/editors", "Toggle which editors get an entrypoint"),
             ("/tools", "Show local AI coding tools"),
             ("/repair", "Restore missing AgentFlow files"),
+            ("/scan", "Detect project signals"),
             ("/context", "Save a no-API handoff snapshot"),
-            ("/instructions", "Show universal agent instructions"),
-            ("/editors", "Toggle which editors get an entrypoint"),
+        ],
+        f"{PAPER} Session State": [
             ("/status", "Show current state"),
             ("/state <phase> <goal>", "Update current phase and goal"),
             ("/snapshot <phase> <goal>", "Update state and save context"),
             ("/change <title>", "Create a local change record"),
             ("/changes", "List local change records"),
             ("/change-show <id>", "Show a local change record"),
-            ("/scan", "Detect project signals"),
         ],
-        f"{BOX} Skill Management": [
+        f"{BOX} Skills": [
             ("/skills", "List global skills"),
             ("/skills all", "Batch install multiple skills/sources"),
             ("/sync", "Sync global skills into this project"),
@@ -563,18 +570,18 @@ def _print_commands() -> None:
             ("/local <path>", "Import a local skill folder"),
             ("/zip <path>", "Import a zipped skill package"),
         ],
-        f"{ROCKET} Project Registry": [
+        f"{FOLDER} Project Registry": [
             ("/register", "Register project for batch sync"),
             ("/sync-all", "Refresh every registered project"),
         ],
-        f"{GLASS} Autopilot Helpers": [
-            ("/ask <request>", "Recommend a tailored workflow"),
-            ("/handoff <agent> <req>", "Generate agent handoff prompt"),
+        f"{GLASS} Workflow Helpers": [
+            ("/ask <request>", "Recommend a workflow for a task"),
+            ("/handoff <agent> <req>", "Generate a handoff prompt"),
         ],
-        f"{DOOR} System Commands": [
-            ("/help", "Show this commands catalog"),
+        f"{DOOR} System": [
+            ("/help", "Show this command catalog"),
             ("/quit", "Exit AgentFlow workbench"),
-        ]
+        ],
     }
     
     table = Table(
@@ -665,6 +672,10 @@ def _handle_command(root: Path, line: str) -> bool:
             border_style=OK,
             padding=(1, 2),
         ))
+        return False
+
+    if command == "/setup":
+        _quick_setup(root)
         return False
 
     if command == "/instructions":
@@ -943,7 +954,13 @@ def _print_change_detail(root: Path, change_id: str) -> None:
     ))
 
 
-# -- /doctor ------------------------------------------------------------------
+# -- /doctor / /check ---------------------------------------------------------
+
+# Mapping from the data-layer status (doctor_project's missing set) to a
+# human + machine consistent label. Both the English word and the icon are
+# emitted so tests asserting "OK"/"Missing" stay green and humans still get
+# color. This fixes the data/display drift that made /doctor feel unreliable.
+
 
 def _print_doctor(root: Path) -> None:
     from rich import box
@@ -958,33 +975,32 @@ def _print_doctor(root: Path) -> None:
         expand=True,
     )
     table.add_column("File / Component Path", style="bold white", width=35)
-    table.add_column("Status", justify="left", width=14)
+    table.add_column("Status", justify="left", width=18)
     table.add_column("Description", style="dim #94a3b8")
 
-    # Map file paths to elegant descriptions
     file_descriptions = {
-        ".agentflow/README.md": "Interactive workbench readme and user guide",
-        ".agentflow/constitution.md": "Project boundary and AI safety rules",
-        ".agentflow/config.yaml": "Agent flow engine configuration (LLM, API settings)",
-        ".agentflow/state.yaml": "Current phase, active goal, and next action",
-        ".agentflow/skills/SKILL.md": "Skill index, routing rules, and verification criteria",
-        "AGENTS.md": "Core entrypoint configuration for AI coding agents",
+        ".agentflow/README.md": "Project guide and quick start",
+        ".agentflow/constitution.md": "Project rules and boundaries",
+        ".agentflow/config.yaml": "Engine configuration (provider, model)",
+        ".agentflow/state.yaml": "Current phase, goal, and next action",
+        ".agentflow/skills/SKILL.md": "Skill index and routing rules",
+        "AGENTS.md": "Agent entrypoint for AI coding tools",
     }
 
     def get_desc(relative_path: str) -> str:
         if relative_path in file_descriptions:
             return file_descriptions[relative_path]
         if relative_path.startswith(".claude"):
-            return "Claude Code integration and instructions"
+            return "Claude Code adapter"
         if relative_path.startswith(".cursor") or "cursor" in relative_path:
-            return "Cursor IDE workspace integration and rules"
+            return "Cursor adapter"
         if relative_path.startswith(".codex") or "codex" in relative_path:
-            return "Codex AI assistant integration rules"
+            return "Codex adapter"
         if relative_path.startswith(".kiro") or "kiro" in relative_path:
-            return "Kiro AI developer tools integration"
+            return "Kiro adapter"
         if relative_path.startswith(".qoder") or "qoder" in relative_path:
-            return "Qoder custom agent workbench adapter"
-        return "AgentFlow project boundary or environment adapter file"
+            return "Qoder adapter"
+        return "Editor adapter entrypoint"
 
     for relative in report["checked"]:
         desc = get_desc(relative)
@@ -998,11 +1014,11 @@ def _print_doctor(root: Path) -> None:
 
     if report["ok"]:
         title_style = "#10b981"
-        title = f"{DOCTOR} [bold #10b981]Doctor — All OK[/]"
+        title = f"{DOCTOR} Health Check — All OK"
     else:
         title_style = "#f59e0b"
         n = len(report["missing"])
-        title = f"{DOCTOR} [bold #f59e0b]Doctor — {n} Missing[/]"
+        title = f"{DOCTOR} Health Check — {n} Missing"
 
     console.print(Panel(
         table,
@@ -1339,6 +1355,52 @@ def _editors_wizard() -> None:
 
     console.print(f"  [{DIM}]Run /init or 'flow editors apply' to update project files.[/]")
     console.print()
+
+
+# -- /setup -------------------------------------------------------------------
+
+def _quick_setup(root: Path) -> None:
+    """Pick agents via full-screen multiselect, then initialize in one step."""
+
+    result = run_quick_setup(root)
+    if result.get("cancelled"):
+        if result.get("empty"):
+            console.print(f"[{WARN}]No agents selected -- nothing changed.[/]")
+        else:
+            console.print(f"[{DIM}]Setup cancelled. No files changed.[/]")
+        console.print()
+        return
+
+    editors = result["editors"]
+    init_result = result["init"]
+    report = doctor_project(root)
+
+    body_lines = [
+        f"[{OK}]Initialized AgentFlow in {root}[/]",
+        f"Agents: [bold {ACCENT}]{', '.join(editors)}[/]",
+        f"Created: [bold]{len(init_result['created'])}[/]  "
+        f"Skipped: [{MUTED}]{len(init_result['skipped'])}[/]",
+    ]
+    link = init_result.get("link") or {}
+    if link.get("method") in {"symlink", "junction"}:
+        body_lines.append(f"Global skills link: [{MUTED}]{link['method']}[/]")
+    elif link.get("method") == "absolute":
+        body_lines.append(f"[{DIM}]Global skills: absolute fallback link[/]")
+
+    if report["ok"]:
+        body_lines.append(f"Doctor: [{OK}]OK[/]")
+    else:
+        body_lines.append(
+            f"Doctor: [{WARN}]{len(report['missing'])} file(s) still missing[/]"
+        )
+
+    console.print(Panel(
+        "\n".join(body_lines),
+        title=f"[bold]Setup Complete[/]",
+        title_align="left",
+        border_style=OK,
+        padding=(1, 2),
+    ))
 
 
 # -- /register ----------------------------------------------------------------

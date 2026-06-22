@@ -415,7 +415,7 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("/init", result.stdout)
-            self.assertIn("/doctor", result.stdout)
+            self.assertIn("/check", result.stdout)
             self.assertIn("/skills", result.stdout)
             self.assertIn("/sync", result.stdout)
             self.assertIn("/npm", result.stdout)
@@ -455,14 +455,14 @@ class CliTests(unittest.TestCase):
             self.assertIn("/init", result.stdout)
 
     def test_dashboard_recommends_check_when_initialized(self) -> None:
-        """When initialized, the hint points to /doctor."""
+        """When initialized, the hint points to /check (alias /doctor)."""
         with tempfile.TemporaryDirectory() as directory:
             project_dir = Path(directory)
             run_cli(project_dir, "init", "--name", "Test")
             result = run_cli(project_dir, input_text="0\n")
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("/doctor", result.stdout)
+            self.assertIn("/check", result.stdout)
 
     def test_dashboard_distinguishes_initialized_with_missing_files(self) -> None:
         """Missing files in an initialized project should not read as uninitialized."""

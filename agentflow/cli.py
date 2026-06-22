@@ -27,6 +27,7 @@ from .changes import create_change, list_changes, show_change
 from .diagnostics import collect_diagnostics, detect_tools
 from .repair import apply_repair_plan, build_repair_plan
 from .state import update_state
+from .quick_setup import run_quick_setup
 from .skills import (
     bind_skill_root,
     describe_skill_home,
@@ -89,6 +90,15 @@ def _build_parser() -> argparse.ArgumentParser:
     init_parser.add_argument("--api-key-env", default="AGENTFLOW_API_KEY")
     init_parser.add_argument("--provider", default="openai-compatible")
     init_parser.add_argument("--model", default="gpt-5.2")
+
+    setup_parser = subparsers.add_parser(
+        "setup",
+        help="Pick agents interactively and initialize in one step.",
+    )
+    setup_parser.add_argument("--name", default=None, help="Project display name.")
+    setup_parser.add_argument(
+        "--force", action="store_true", help="Overwrite existing files."
+    )
 
     subparsers.add_parser("scan", help="Print detected project signals.")
     state_parser = subparsers.add_parser("state", help="Update AgentFlow session state.")
@@ -231,6 +241,32 @@ def _cmd_init(args: argparse.Namespace, cwd: Path) -> int:
         print("Note: created absolute fallback for global skills (symlink unavailable).")
     elif link.get("method") in {"symlink", "junction"}:
         print(f"Linked global skill folder via {link['method']}.")
+    return 0
+
+
+def _cmd_setup(args: argparse.Namespace, cwd: Path) -> int:
+    result = run_quick_setup(
+        cwd,
+        project_name=args.name,
+        force=args.force,
+    )
+    if result.get("cancelled"):
+        if result.get("empty"):
+            print("No agents selected -- nothing changed.")
+        else:
+            print("Setup cancelled.")
+        return 1
+    editors = result["editors"]
+    init_result = result["init"]
+    print(f"Initialized AgentFlow in {cwd}")
+    print(f"Agents: {', '.join(editors)}")
+    print(f"Created: {len(init_result['created'])}")
+    print(f"Skipped: {len(init_result['skipped'])}")
+    link = init_result.get("link") or {}
+    if link.get("method") in {"symlink", "junction"}:
+        print(f"Linked global skill folder via {link['method']}.")
+    elif link.get("method") == "absolute":
+        print("Note: created absolute fallback for global skills (symlink unavailable).")
     return 0
 
 
@@ -439,6 +475,7 @@ def _cmd_projects(args: argparse.Namespace, cwd: Path) -> int:
 # Dispatch table: command name -> handler(args, cwd) -> exit code.
 COMMANDS = {
     "init": _cmd_init,
+    "setup": _cmd_setup,
     "scan": _cmd_scan,
     "state": _cmd_state,
     "snapshot": _cmd_snapshot,

@@ -20,6 +20,9 @@ env/
 .DS_Store
 Thumbs.db
 
+# Windows reserved-name accident (cannot be deleted normally)
+nul
+
 # AgentFlow local links/cache
 .agentflow/skills/_global
 .agentflow/skills/.global-link.txt
