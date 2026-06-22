@@ -1,4 +1,11 @@
-"""Command-line interface for AgentFlow MVP."""
+"""Command-line interface for AgentFlow MVP.
+
+Structure:
+- :func:`main` parses argv and dispatches to a handler via ``COMMANDS``.
+- Each top-level command has a ``_cmd_<name>(args, cwd) -> int`` handler.
+- Complex subcommand groups (skills/editors/projects) keep their existing
+  ``_handle_*`` helpers; the thin ``_cmd_*`` wrapper just calls them.
+"""
 
 from __future__ import annotations
 
@@ -45,6 +52,21 @@ def main(argv: list[str] | None = None) -> int:
 
         return run_repl(Path.cwd())
 
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    cwd = Path.cwd()
+
+    handler = COMMANDS.get(args.command)
+    if handler is None:
+        parser.print_help()
+        return 1
+    return handler(args, cwd)
+
+
+# -- Argument parser ----------------------------------------------------------
+
+
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="flow",
         description="Initialize and guide a lightweight AI coding workflow.",
@@ -179,58 +201,46 @@ def main(argv: list[str] | None = None) -> int:
         "sync-all", help="Re-link the global skill folder and refresh the index in every registered project."
     )
 
-    args = parser.parse_args(argv)
-    cwd = Path.cwd()
+    return parser
 
-    if args.command == "init":
-        editor_list: list[str] | None = None
-        if args.editors is not None:
-            editor_list = [item.strip() for item in args.editors.split(",") if item.strip()]
-        result = init_project(
-            cwd,
-            project_name=args.name,
-            editors=editor_list,
-            force=args.force,
-            api_key_env=args.api_key_env,
-            provider=args.provider,
-            model=args.model,
-            link_global_skills=not args.no_link,
-        )
-        print(f"Initialized AgentFlow in {cwd}")
-        print(f"Created: {len(result['created'])}")
-        print(f"Skipped: {len(result['skipped'])}")
-        if result.get("editors_removed"):
-            print(f"Cleared disabled editor folders: {', '.join(result['editors_removed'])}")
-        link = result.get("link") or {}
-        if link.get("method") == "absolute":
-            print("Note: created absolute fallback for global skills (symlink unavailable).")
-        elif link.get("method") in {"symlink", "junction"}:
-            print(f"Linked global skill folder via {link['method']}.")
-        return 0
 
-    if args.command == "scan":
-        print(to_json(scan_project(cwd)))
-        return 0
+# -- Command handlers ---------------------------------------------------------
 
-    if args.command == "state":
-        if args.state_command == "set":
-            blocked = None if args.blocked is None else args.blocked == "true"
-            updated = update_state(
-                cwd,
-                phase=args.phase,
-                current_goal=args.goal,
-                active_change=args.change,
-                next_action=args.next,
-                blocked=blocked,
-            )
-            print("Updated state:")
-            for key in ("phase", "current_goal", "active_change", "next_action", "blocked"):
-                if key in updated:
-                    print(f"- {key}: {updated[key]}")
-            return 0
-        return 1
 
-    if args.command == "snapshot":
+def _cmd_init(args: argparse.Namespace, cwd: Path) -> int:
+    editor_list: list[str] | None = None
+    if args.editors is not None:
+        editor_list = [item.strip() for item in args.editors.split(",") if item.strip()]
+    result = init_project(
+        cwd,
+        project_name=args.name,
+        editors=editor_list,
+        force=args.force,
+        api_key_env=args.api_key_env,
+        provider=args.provider,
+        model=args.model,
+        link_global_skills=not args.no_link,
+    )
+    print(f"Initialized AgentFlow in {cwd}")
+    print(f"Created: {len(result['created'])}")
+    print(f"Skipped: {len(result['skipped'])}")
+    if result.get("editors_removed"):
+        print(f"Cleared disabled editor folders: {', '.join(result['editors_removed'])}")
+    link = result.get("link") or {}
+    if link.get("method") == "absolute":
+        print("Note: created absolute fallback for global skills (symlink unavailable).")
+    elif link.get("method") in {"symlink", "junction"}:
+        print(f"Linked global skill folder via {link['method']}.")
+    return 0
+
+
+def _cmd_scan(args: argparse.Namespace, cwd: Path) -> int:
+    print(to_json(scan_project(cwd)))
+    return 0
+
+
+def _cmd_state(args: argparse.Namespace, cwd: Path) -> int:
+    if args.state_command == "set":
         blocked = None if args.blocked is None else args.blocked == "true"
         updated = update_state(
             cwd,
@@ -240,162 +250,216 @@ def main(argv: list[str] | None = None) -> int:
             next_action=args.next,
             blocked=blocked,
         )
-        result = save_context(cwd, output=args.output)
         print("Updated state:")
         for key in ("phase", "current_goal", "active_change", "next_action", "blocked"):
             if key in updated:
                 print(f"- {key}: {updated[key]}")
-        print(f"Saved context: {result['path']}")
         return 0
+    return 1
 
-    if args.command == "changes":
-        if args.changes_command == "new":
-            result = create_change(
-                cwd,
-                title=args.title,
-                summary=args.summary,
-                change_id=args.id,
-            )
-            print(f"Created change: {result['id']}")
-            print(f"Path: {result['path']}")
+
+def _cmd_snapshot(args: argparse.Namespace, cwd: Path) -> int:
+    blocked = None if args.blocked is None else args.blocked == "true"
+    updated = update_state(
+        cwd,
+        phase=args.phase,
+        current_goal=args.goal,
+        active_change=args.change,
+        next_action=args.next,
+        blocked=blocked,
+    )
+    result = save_context(cwd, output=args.output)
+    print("Updated state:")
+    for key in ("phase", "current_goal", "active_change", "next_action", "blocked"):
+        if key in updated:
+            print(f"- {key}: {updated[key]}")
+    print(f"Saved context: {result['path']}")
+    return 0
+
+
+def _cmd_changes(args: argparse.Namespace, cwd: Path) -> int:
+    if args.changes_command == "new":
+        result = create_change(
+            cwd,
+            title=args.title,
+            summary=args.summary,
+            change_id=args.id,
+        )
+        print(f"Created change: {result['id']}")
+        print(f"Path: {result['path']}")
+        return 0
+    if args.changes_command == "list":
+        changes = list_changes(cwd)
+        if not changes:
+            print("No change records found.")
             return 0
-        if args.changes_command == "list":
-            changes = list_changes(cwd)
-            if not changes:
-                print("No change records found.")
-                return 0
-            for change in changes:
-                summary = f" - {change['summary']}" if change["summary"] else ""
-                print(f"- {change['id']}: {change['title']}{summary}")
-            return 0
-        if args.changes_command == "show":
-            try:
-                result = show_change(cwd, args.id)
-            except FileNotFoundError as error:
-                print(str(error))
-                return 1
-            print(result["content"], end="")
-            return 0
+        for change in changes:
+            summary = f" - {change['summary']}" if change["summary"] else ""
+            print(f"- {change['id']}: {change['title']}{summary}")
+        return 0
+    if args.changes_command == "show":
+        try:
+            result = show_change(cwd, args.id)
+        except FileNotFoundError as error:
+            print(str(error))
+            return 1
+        print(result["content"], end="")
+        return 0
+    return 1
+
+
+def _cmd_ask(args: argparse.Namespace, cwd: Path) -> int:
+    advice = recommend_route(args.request, scan_project(cwd))
+    print(f"Phase: {advice['phase']}")
+    print(f"Recommended workflow: {advice['workflow']}")
+    print(f"Recommended agent: {advice['recommended_agent']}")
+    print(f"Implementation allowed: {str(advice['implementation_allowed']).lower()}")
+    print(f"Required skills: {', '.join(advice['required_skills'])}")
+    print(f"Next artifacts: {', '.join(advice['next_artifacts'])}")
+    print(f"Reason: {advice['reason']}")
+    print()
+    print(
+        "Next: flow handoff "
+        f"{advice['recommended_agent']} \"{args.request}\""
+    )
+    return 0
+
+
+def _cmd_handoff(args: argparse.Namespace, cwd: Path) -> int:
+    print(render_handoff_prompt(cwd, args.platform, args.request))
+    return 0
+
+
+def _cmd_status(args: argparse.Namespace, cwd: Path) -> int:
+    state_path = cwd / ".agentflow" / "state.yaml"
+    if not state_path.exists():
+        print("No .agentflow/state.yaml found. Run `flow init` first.")
         return 1
+    print(state_path.read_text(encoding="utf-8"))
+    return 0
 
-    if args.command == "ask":
-        advice = recommend_route(args.request, scan_project(cwd))
-        print(f"Phase: {advice['phase']}")
-        print(f"Recommended workflow: {advice['workflow']}")
-        print(f"Recommended agent: {advice['recommended_agent']}")
-        print(f"Implementation allowed: {str(advice['implementation_allowed']).lower()}")
-        print(f"Required skills: {', '.join(advice['required_skills'])}")
-        print(f"Next artifacts: {', '.join(advice['next_artifacts'])}")
-        print(f"Reason: {advice['reason']}")
-        print()
+
+def _cmd_doctor(args: argparse.Namespace, cwd: Path) -> int:
+    report = doctor_project(cwd)
+    label = "check" if args.command == "check" else "doctor"
+    if report["ok"]:
+        print(f"AgentFlow {label}: OK")
+    else:
+        print(f"AgentFlow {label}: missing files")
+        for relative in report["missing"]:
+            print(f"- {relative}")
+    _print_diagnostics(cwd)
+    return 0 if report["ok"] else 1
+
+
+def _cmd_repair(args: argparse.Namespace, cwd: Path) -> int:
+    plan = build_repair_plan(cwd, project_name=args.name)
+    if args.dry_run:
+        print("Repair plan:")
+        if not plan.actions:
+            print("- nothing to repair")
+            return 0
+        for action in plan.actions:
+            print(f"- create {action.relative_path}")
+        return 0
+    result = apply_repair_plan(plan)
+    print(f"Created: {len(result['created'])}")
+    for relative in result["created"]:
+        print(f"- {relative}")
+    if result["skipped"]:
+        print(f"Skipped: {len(result['skipped'])}")
+    return 0
+
+
+def _cmd_instructions(args: argparse.Namespace, cwd: Path) -> int:
+    state_path = cwd / ".agentflow" / "state.yaml"
+    if not state_path.exists():
+        print("Project not initialized. Run `flow init` first.")
+        return 1
+    print(AGENT_INSTRUCTIONS)
+    return 0
+
+
+def _cmd_tools(args: argparse.Namespace, cwd: Path) -> int:
+    tools = detect_tools()
+    if args.json:
         print(
-            "Next: flow handoff "
-            f"{advice['recommended_agent']} \"{args.request}\""
+            json.dumps(
+                {
+                    "tools": [
+                        {
+                            "name": tool.name,
+                            "display": tool.display,
+                            "command": tool.command,
+                            "status": tool.status,
+                            "path": tool.path,
+                        }
+                        for tool in tools
+                    ]
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
         )
         return 0
+    print("Local AI coding tools:")
+    for tool in tools:
+        location = tool.path or "not found on PATH"
+        print(f"- [{tool.status}] {tool.display} ({tool.command}): {location}")
+    return 0
 
-    if args.command == "handoff":
-        print(render_handoff_prompt(cwd, args.platform, args.request))
+
+def _cmd_context(args: argparse.Namespace, cwd: Path) -> int:
+    if args.context_command == "save":
+        result = save_context(cwd, output=args.output)
+        print(f"Saved context: {result['path']}")
         return 0
-
-    if args.command == "status":
-        state_path = cwd / ".agentflow" / "state.yaml"
-        if not state_path.exists():
-            print("No .agentflow/state.yaml found. Run `flow init` first.")
-            return 1
-        print(state_path.read_text(encoding="utf-8"))
-        return 0
-
-    if args.command in {"doctor", "check"}:
-        report = doctor_project(cwd)
-        label = "check" if args.command == "check" else "doctor"
-        if report["ok"]:
-            print(f"AgentFlow {label}: OK")
-        else:
-            print(f"AgentFlow {label}: missing files")
-            for relative in report["missing"]:
-                print(f"- {relative}")
-        _print_diagnostics(cwd)
-        return 0 if report["ok"] else 1
-
-    if args.command == "repair":
-        plan = build_repair_plan(cwd, project_name=args.name)
-        if args.dry_run:
-            print("Repair plan:")
-            if not plan.actions:
-                print("- nothing to repair")
-                return 0
-            for action in plan.actions:
-                print(f"- create {action.relative_path}")
-            return 0
-        result = apply_repair_plan(plan)
-        print(f"Created: {len(result['created'])}")
-        for relative in result["created"]:
-            print(f"- {relative}")
-        if result["skipped"]:
-            print(f"Skipped: {len(result['skipped'])}")
-        return 0
-
-    if args.command == "instructions":
-        state_path = cwd / ".agentflow" / "state.yaml"
-        if not state_path.exists():
-            print("Project not initialized. Run `flow init` first.")
-            return 1
-        print(AGENT_INSTRUCTIONS)
-        return 0
-
-    if args.command == "tools":
-        tools = detect_tools()
-        if args.json:
-            print(
-                json.dumps(
-                    {
-                        "tools": [
-                            {
-                                "name": tool.name,
-                                "display": tool.display,
-                                "command": tool.command,
-                                "status": tool.status,
-                                "path": tool.path,
-                            }
-                            for tool in tools
-                        ]
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                )
-            )
-            return 0
-        print("Local AI coding tools:")
-        for tool in tools:
-            location = tool.path or "not found on PATH"
-            print(f"- [{tool.status}] {tool.display} ({tool.command}): {location}")
-        return 0
-
-    if args.command == "context":
-        if args.context_command == "save":
-            result = save_context(cwd, output=args.output)
-            print(f"Saved context: {result['path']}")
-            return 0
-        return 1
-
-    if args.command == "npx":
-        installed = install_npx_skill_command(args.args)
-        sync_project_skill_index(cwd)
-        _print_install_result(installed)
-        return 0
-
-    if args.command == "skills":
-        return _handle_skills_command(args, cwd)
-
-    if args.command == "editors":
-        return _handle_editors_command(args, cwd)
-
-    if args.command == "projects":
-        return _handle_projects_command(args, cwd)
-
-    parser.print_help()
     return 1
+
+
+def _cmd_npx(args: argparse.Namespace, cwd: Path) -> int:
+    installed = install_npx_skill_command(args.args)
+    sync_project_skill_index(cwd)
+    _print_install_result(installed)
+    return 0
+
+
+def _cmd_skills(args: argparse.Namespace, cwd: Path) -> int:
+    return _handle_skills_command(args, cwd)
+
+
+def _cmd_editors(args: argparse.Namespace, cwd: Path) -> int:
+    return _handle_editors_command(args, cwd)
+
+
+def _cmd_projects(args: argparse.Namespace, cwd: Path) -> int:
+    return _handle_projects_command(args, cwd)
+
+
+# Dispatch table: command name -> handler(args, cwd) -> exit code.
+COMMANDS = {
+    "init": _cmd_init,
+    "scan": _cmd_scan,
+    "state": _cmd_state,
+    "snapshot": _cmd_snapshot,
+    "changes": _cmd_changes,
+    "ask": _cmd_ask,
+    "handoff": _cmd_handoff,
+    "status": _cmd_status,
+    "doctor": _cmd_doctor,
+    "check": _cmd_doctor,
+    "repair": _cmd_repair,
+    "instructions": _cmd_instructions,
+    "tools": _cmd_tools,
+    "context": _cmd_context,
+    "npx": _cmd_npx,
+    "skills": _cmd_skills,
+    "editors": _cmd_editors,
+    "projects": _cmd_projects,
+}
+
+
+# -- Shared helpers -----------------------------------------------------------
 
 
 def _print_diagnostics(cwd: Path) -> None:

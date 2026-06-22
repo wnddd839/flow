@@ -367,7 +367,7 @@ class CoreTests(unittest.TestCase):
             home = Path(directory) / "home"
             bind_skill_root(home / "skills", home=home)
 
-            def fake_run(command, text, capture_output, check):
+            def fake_run(command, text, capture_output, check, **kwargs):
                 self.assertEqual(command[:2], ["npm", "pack"])
                 self.assertIn("--ignore-scripts", command)
                 pack_destination = Path(command[command.index("--pack-destination") + 1])

@@ -158,7 +158,7 @@ def install_npm_skill(package: str, home: str | Path | None = None) -> SkillInfo
         "--pack-destination",
         str(cache_dir),
     ]
-    result = subprocess.run(command, text=True, capture_output=True, check=False)
+    result = subprocess.run(command, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "npm pack failed")
 
@@ -186,6 +186,8 @@ def install_github_skill(spec: str, home: str | Path | None = None) -> SkillInfo
         result = subprocess.run(
             ["git", "clone", "--depth", "1", url, str(checkout)],
             text=True,
+            encoding="utf-8",
+            errors="replace",
             capture_output=True,
             check=False,
         )
@@ -335,7 +337,7 @@ def _install_all_npm_skills(
         "--pack-destination",
         str(cache_dir),
     ]
-    result = subprocess.run(command, text=True, capture_output=True, check=False)
+    result = subprocess.run(command, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "npm pack failed")
 
@@ -368,6 +370,8 @@ def _install_all_github_skills(
         result = subprocess.run(
             ["git", "clone", "--depth", "1", url, str(checkout)],
             text=True,
+            encoding="utf-8",
+            errors="replace",
             capture_output=True,
             check=False,
         )
@@ -452,6 +456,8 @@ def link_global_skills_dir(
                 result = subprocess.run(
                     ["cmd", "/c", "mklink", "/J", str(link_path), str(target)],
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     capture_output=True,
                     check=False,
                 )
