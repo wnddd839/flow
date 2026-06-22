@@ -30,6 +30,7 @@ from .core import (
     scan_project,
     to_json,
 )
+from .clipboard import copy_to_clipboard
 from .context import save_context
 from .changes import create_change, list_changes, show_change
 from .diagnostics import detect_tools
@@ -692,6 +693,8 @@ def _handle_command(root: Path, line: str) -> bool:
         output = args[0] if args else None
         result = save_context(root, output=output)
         console.print(f"[{OK}]Saved context:[/] {result['path']}")
+        if copy_to_clipboard(result["content"]):
+            console.print(f"[{OK}]Copied to clipboard.[/]")
         return False
 
     if command == "/editors":
@@ -792,11 +795,17 @@ def _handle_command(root: Path, line: str) -> bool:
         platform = args[0]
         request = " ".join(args[1:])
         prompt = render_handoff_prompt(root, platform, request)
+        copied = copy_to_clipboard(prompt)
+        subtitle = (
+            "[dim]Copied to clipboard — paste into your AI coding tool[/]"
+            if copied
+            else "[dim]Copy the content above into your AI coding tool[/]"
+        )
         console.print(Panel(
             prompt.rstrip(),
             title=f"[bold]Handoff -> {platform.title()}[/]",
             title_align="left",
-            subtitle="[dim]Copy the content above into your AI coding tool[/]",
+            subtitle=subtitle,
             subtitle_align="left",
             border_style="bright_magenta",
             padding=(1, 2),
@@ -845,6 +854,8 @@ def _handle_command(root: Path, line: str) -> bool:
             console.print(f"[{ERR}]{exc}[/]")
             return False
         console.print(f"[{OK}]Snapshot saved:[/] {result['path']}")
+        if copy_to_clipboard(result["content"]):
+            console.print(f"[{OK}]Copied to clipboard.[/]")
         return False
 
     if command == "/change":

@@ -4,7 +4,10 @@ import tempfile
 import unittest
 import os
 import json
+import argparse
+import io
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -130,6 +133,37 @@ class CliTests(unittest.TestCase):
             self.assertIn("Cursor", result.stdout)
             self.assertIn(".agentflow/constitution.md", result.stdout)
             self.assertIn("补充登录流程的集成测试", result.stdout)
+
+    def test_cmd_handoff_notifies_when_clipboard_copy_succeeds(self) -> None:
+        from agentflow.cli import _cmd_handoff
+
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            args = argparse.Namespace(platform="codex", request="fix bug")
+            stderr = io.StringIO()
+            with patch("agentflow.cli.render_handoff_prompt", return_value="# Handoff\n"):
+                with patch("agentflow.cli.copy_to_clipboard", return_value=True):
+                    with patch("sys.stderr", stderr):
+                        code = _cmd_handoff(args, project_dir)
+            self.assertEqual(code, 0)
+            self.assertIn("Copied to clipboard.", stderr.getvalue())
+
+    def test_cmd_context_save_notifies_when_clipboard_copy_succeeds(self) -> None:
+        from agentflow.cli import _cmd_context
+
+        with tempfile.TemporaryDirectory() as directory:
+            project_dir = Path(directory)
+            args = argparse.Namespace(context_command="save", output=None)
+            stderr = io.StringIO()
+            with patch(
+                "agentflow.cli.save_context",
+                return_value={"path": "FLOW_CONTEXT.md", "content": "# Flow Context\n"},
+            ):
+                with patch("agentflow.cli.copy_to_clipboard", return_value=True):
+                    with patch("sys.stderr", stderr):
+                        code = _cmd_context(args, project_dir)
+            self.assertEqual(code, 0)
+            self.assertIn("Copied to clipboard.", stderr.getvalue())
 
     def test_cli_instructions_initialized(self) -> None:
         """flow instructions outputs agent instructions when initialized."""

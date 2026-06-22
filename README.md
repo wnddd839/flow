@@ -335,7 +335,9 @@ the current commands do not require or read a secret.
    `flow setup` is an explicit alias for the picker.
 2. Run `flow ask "<request>"` when you are unsure where a task belongs.
 3. Run `flow handoff <platform> "<request>"`.
-4. Paste the prompt into your chosen AI coding tool.
+4. Paste into your AI coding tool. On desktop terminals, Flow also copies the
+   handoff prompt (and `flow context save` / `flow snapshot` output) to the
+   clipboard when a platform tool is available (`clip`, `pbcopy`, `wl-copy`, etc.).
 5. Require the agent to finish with files changed, commands run, evidence,
    unresolved risks, and next action.
 

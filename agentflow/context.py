@@ -82,8 +82,9 @@ def save_context(
     if not target.is_absolute():
         target = root / target
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(render_context_markdown(root), encoding="utf-8")
-    return {"path": str(target)}
+    content = render_context_markdown(root)
+    target.write_text(content, encoding="utf-8")
+    return {"path": str(target), "content": content}
 
 
 def _read_text(path: Path) -> str:

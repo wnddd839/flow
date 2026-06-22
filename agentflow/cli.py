@@ -22,6 +22,7 @@ from .core import (
     scan_project,
     to_json,
 )
+from .clipboard import copy_to_clipboard, print_clipboard_notice
 from .context import save_context
 from .changes import create_change, list_changes, show_change
 from .diagnostics import collect_diagnostics, detect_tools
@@ -328,6 +329,7 @@ def _cmd_snapshot(args: argparse.Namespace, cwd: Path) -> int:
         if key in updated:
             print(f"- {key}: {updated[key]}")
     print(f"Saved context: {result['path']}")
+    print_clipboard_notice(copy_to_clipboard(result["content"]))
     return 0
 
 
@@ -380,7 +382,9 @@ def _cmd_ask(args: argparse.Namespace, cwd: Path) -> int:
 
 
 def _cmd_handoff(args: argparse.Namespace, cwd: Path) -> int:
-    print(render_handoff_prompt(cwd, args.platform, args.request))
+    prompt = render_handoff_prompt(cwd, args.platform, args.request)
+    print(prompt, end="" if prompt.endswith("\n") else "\n")
+    print_clipboard_notice(copy_to_clipboard(prompt))
     return 0
 
 
@@ -467,6 +471,7 @@ def _cmd_context(args: argparse.Namespace, cwd: Path) -> int:
     if args.context_command == "save":
         result = save_context(cwd, output=args.output)
         print(f"Saved context: {result['path']}")
+        print_clipboard_notice(copy_to_clipboard(result["content"]))
         return 0
     return 1
 
