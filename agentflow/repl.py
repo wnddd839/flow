@@ -216,7 +216,7 @@ def _status_footer_text(root: Path) -> tuple[str, str]:
     if phase == "not initialized":
         left = f" {STAR} [bold #ef4444]not initialized[/]  [dim #94a3b8](run /setup to pick agents and initialize)[/]"
     elif not report["ok"]:
-        left = f" {STAR} [bold #f59e0b]needs attention[/]  [dim #94a3b8](run /doctor to inspect missing files)[/]"
+        left = f" {STAR} [bold #f59e0b]needs attention[/]  [dim #94a3b8](run /check to inspect missing files)[/]"
     else:
         left = f" {STAR} [bold #10b981]ready[/]  [dim #94a3b8](type /help to list commands, or type a task)[/]"
 
@@ -294,7 +294,7 @@ def run_repl(project_dir: str | Path | None = None) -> int:
 
         # Number-driven wizard
         if line == "1":
-            _wizard_setup(root)
+            _quick_setup(root)
             continue
         if line == "2":
             _wizard_doctor(root)
@@ -473,39 +473,6 @@ def _print_bye() -> None:
 
 
 # -- Wizard flows -------------------------------------------------------------
-
-def _wizard_setup(root: Path) -> None:
-    """Guided project initialization."""
-    try:
-        name = console.input(f"  [{ACCENT}]Project name[/] [{DIM}]({root.name})[/]: ").strip()
-    except (EOFError, KeyboardInterrupt):
-        console.print()
-        return
-
-    if not name:
-        name = root.name
-
-    result = init_project(root, project_name=name)
-    console.print()
-    console.print(Panel(
-        f"[{OK}]Initialized AgentFlow in {root}[/]\n"
-        f"Created: [bold]{len(result['created'])}[/]  "
-        f"Skipped: [{MUTED}]{len(result['skipped'])}[/]",
-        title="[bold]Setup Complete[/]",
-        title_align="left",
-        border_style=OK,
-        padding=(1, 2),
-    ))
-
-    # Show doctor result
-    report = doctor_project(root)
-    if report["ok"]:
-        console.print(f"  [{OK}]Doctor: OK[/]")
-    else:
-        n = len(report["missing"])
-        console.print(f"  [{WARN}]Doctor: {n} file{'s' if n != 1 else ''} still missing[/]")
-    console.print()
-
 
 def _wizard_doctor(root: Path) -> None:
     """Guided setup check."""
@@ -839,7 +806,7 @@ def _handle_command(root: Path, line: str) -> bool:
     if command == "/status":
         state_path = root / ".agentflow" / "state.yaml"
         if not state_path.exists():
-            console.print(f"[{WARN}]No .agentflow/state.yaml found. Run /init first.[/]")
+            console.print(f"[{WARN}]No .agentflow/state.yaml found. Run /setup first.[/]")
             return False
         content = state_path.read_text(encoding="utf-8")
         console.print(Panel(
@@ -1357,7 +1324,7 @@ def _editors_wizard() -> None:
             enabled.add(name)
             console.print(f"  [{OK}]Enabled:[/] {name}")
 
-    console.print(f"  [{DIM}]Run /init or 'flow editors apply' to update project files.[/]")
+    console.print(f"  [{DIM}]Run /setup or 'flow editors apply' to update project files.[/]")
     console.print()
 
 

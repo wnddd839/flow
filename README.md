@@ -28,7 +28,7 @@ a task in natural language.
 | Doctor    12 missing files                     |
 | Skills    0 global skills                      |
 +------------------------------------------------+
-/init  /doctor  /skills  /sync  /npm  /npx  /local  /instructions
+/setup  /check  /skills  /sync  /npm  /npx  /local  /instructions
 
 +-- Command -------------------------------------+
 | > Try "/help" or type a task

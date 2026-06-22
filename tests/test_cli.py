@@ -482,13 +482,13 @@ class CliTests(unittest.TestCase):
             self.assertIn("/help", result.stdout)
 
     def test_dashboard_recommends_setup_when_not_initialized(self) -> None:
-        """When not initialized, the hint points to /init."""
+        """When not initialized, the status footer points to /setup."""
         with tempfile.TemporaryDirectory() as directory:
             project_dir = Path(directory)
             result = run_cli(project_dir, input_text="0\n")
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("/init", result.stdout)
+            self.assertIn("/setup", result.stdout)
 
     def test_dashboard_recommends_check_when_initialized(self) -> None:
         """When initialized, the hint points to /check (alias /doctor)."""
@@ -555,18 +555,15 @@ class CliTests(unittest.TestCase):
 
     # -- Wizard flow tests ----------------------------------------------------
 
-    def test_wizard_setup_completes_init(self) -> None:
-        """Input '1\\nMy Project\\n0\\n' completes initialization."""
+    def test_wizard_setup_routes_to_picker(self) -> None:
+        """Input '1' uses the same quick-setup path as /setup (non-TTY cancels cleanly)."""
         with tempfile.TemporaryDirectory() as directory:
             project_dir = Path(directory)
-            result = run_cli(project_dir, input_text="1\nMy Project\n0\n")
+            result = run_cli(project_dir, input_text="1\n0\n")
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Setup Complete", result.stdout)
-            self.assertIn("Initialized AgentFlow", result.stdout)
-            self.assertIn("Doctor", result.stdout)
-            self.assertTrue((project_dir / ".agentflow/constitution.md").is_file())
-            self.assertTrue((project_dir / ".agentflow/README.md").is_file())
+            self.assertIn("Setup cancelled", result.stdout)
+            self.assertFalse((project_dir / ".agentflow").exists())
 
     def test_wizard_check_shows_doctor(self) -> None:
         """Input '2\\n0\\n' shows doctor output."""
