@@ -23,6 +23,7 @@ Thumbs.db
 # Windows reserved-name accident (cannot be deleted normally)
 nul
 
-# AgentFlow local links/cache
+# AgentFlow local links/cache (v1 legacy)
 .agentflow/skills/_global
+.agentflow/skills/_global.old
 .agentflow/skills/.global-link.txt

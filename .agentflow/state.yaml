@@ -1,6 +1,0 @@
-project: "agentflow-mvp"
-phase: "initialized"
-current_goal: ""
-active_change: ""
-next_action: "Run `flow instructions` and paste the output into your AI coding tool."
-blocked: false
