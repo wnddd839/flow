@@ -1,4 +1,7 @@
-"""Local repair helpers for AgentFlow projects."""
+"""根据 doctor 结果**只创建缺失**的 AgentFlow 文件（不覆盖用户已改内容）。
+
+``build_repair_plan`` 列出待补文件；``apply_repair_plan`` 执行写入。与 ``--force`` init 不同，repair 偏安全恢复。
+"""
 
 from __future__ import annotations
 

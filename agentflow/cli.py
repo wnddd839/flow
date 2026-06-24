@@ -1,10 +1,22 @@
-"""Command-line interface for AgentFlow MVP.
+"""命令行入口（``flow`` / ``agentflow`` 控制台脚本指向此处）。
 
-Structure:
-- :func:`main` parses argv and dispatches to a handler via ``COMMANDS``.
-- Each top-level command has a ``_cmd_<name>(args, cwd) -> int`` handler.
-- Complex subcommand groups (skills/editors/projects) keep their existing
-  ``_handle_*`` helpers; the thin ``_cmd_*`` wrapper just calls them.
+## 职责
+
+- 无参数 → 委托 ``repl.run_repl`` 进入交互工作台
+- 有参数 → ``argparse`` 解析子命令，经 ``COMMANDS`` 分发表调用 ``_cmd_*`` 处理函数
+
+## 结构约定
+
+- ``_build_parser``  — 注册所有子命令与参数
+- ``_cmd_<name>``     — 薄包装，尽量把逻辑放在 ``core`` / ``skills`` 等模块
+- ``_handle_*``       — skills / editors / projects 等**多级子命令**的共用实现
+- ``COMMANDS``        — 子命令名 → 处理函数 的映射表（新增命令时改这里）
+
+## 与其它模块
+
+- 初始化/体检：``core``、``quick_setup``、``repair``、``diagnostics``
+- 交接输出：``core.render_handoff_prompt``、``context.save_context``、``clipboard``
+- 全局 skill / 编辑器：``skills``、``editors``、``projects``
 """
 
 from __future__ import annotations
@@ -495,7 +507,7 @@ def _cmd_projects(args: argparse.Namespace, cwd: Path) -> int:
     return _handle_projects_command(args, cwd)
 
 
-# Dispatch table: command name -> handler(args, cwd) -> exit code.
+# 子命令分发表：新增顶层命令时在此注册，并在 _build_parser 里加 parser。
 COMMANDS = {
     "init": _cmd_init,
     "setup": _cmd_setup,

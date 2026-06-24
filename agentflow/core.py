@@ -1,4 +1,19 @@
-"""Core AgentFlow operations."""
+"""核心业务逻辑（尽量保持纯函数、少副作用，便于单测）。
+
+## 主要能力
+
+- ``init_project``           — 在项目里创建 ``.agentflow/`` 骨架与各编辑器薄入口
+- ``scan_project``           — 检测 Python/Node 等信号与常用测试命令
+- ``recommend_route``        — 根据用户描述做**关键词**工作流推荐（非 AI）
+- ``render_handoff_prompt``  — 生成可粘贴到 AI 工具的 handoff 正文
+- ``doctor_project``         — 检查必需文件是否存在（骨架体检，非深度校验）
+
+## 依赖
+
+- ``templates`` — 文件内容模板
+- ``editors``   — 决定 doctor 要检查哪些编辑器入口（读全局 ``editors.yaml``）
+- ``skills``    — init 时可选链接全局 skill 目录
+"""
 
 from __future__ import annotations
 
@@ -18,9 +33,7 @@ SKILL_PURPOSES = {
     "finish": "Close a session with summary, evidence, risks, and next action.",
 }
 
-# Files that are always part of the .agentflow skeleton, regardless of which
-# editors the user has enabled. Editor entrypoints are checked separately so
-# doctor only complains about editors the user actually enabled.
+# 无论用户启用哪些编辑器，以下文件始终属于 AgentFlow 骨架（doctor 必查）。
 BASE_REQUIRED_FILES = [
     ".agentflow/README.md",
     ".agentflow/constitution.md",
@@ -184,7 +197,7 @@ def scan_project(project_dir: str | Path) -> dict[str, list[str] | int]:
 
 
 def recommend_route(request: str, scan: dict[str, object] | None = None) -> dict[str, object]:
-    """Recommend the next AI coding workflow for a request."""
+    """根据用户描述推荐下一步工作流（关键词启发式，非 AI 推理）。"""
 
     text = request.lower()
     scan = scan or {}

@@ -1,4 +1,22 @@
-"""Interactive shell for AgentFlow — offline project preparation workbench."""
+"""交互式工作台（直接运行 ``flow`` 无参数时进入）。
+
+## 职责
+
+终端里的「仪表盘 + 斜杠命令」体验，不负责复杂业务逻辑，主要调用其它模块并渲染 Rich UI。
+
+## 文件内章节（用编辑器折叠/搜索 ``# --`` 跳转）
+
+- ``Public entry point``  — ``run_repl`` 主循环
+- ``Banner / dashboard``  — 启动横幅与状态栏
+- ``Wizard flows``        — 数字快捷键 1/2/3（1 与 ``/setup`` 同路径）
+- ``Command dispatcher``  — ``_handle_command`` 解析 ``/init``、``/handoff`` 等
+- ``/doctor``、``/setup``、``/editors`` … — 各命令的展示实现
+
+## 与其它模块的关系
+
+- 业务逻辑在 ``core``、``quick_setup``、``skills`` …；本文件只做输入输出与面板
+- CLI 与 REPL **共用**同一套底层函数，行为应保持一致
+"""
 
 from __future__ import annotations
 
@@ -272,7 +290,7 @@ def _read_prompt(session, root: Path) -> str:
         _print_status_footer(root)
 
 
-# -- Public entry point -------------------------------------------------------
+# -- 公开入口：run_repl 主循环 -------------------------------------------------
 
 def run_repl(project_dir: str | Path | None = None) -> int:
     """Run the AgentFlow interactive shell."""
@@ -602,7 +620,7 @@ def _print_menu() -> None:
     _print_wizard_menu(initialized)
 
 
-# -- Command dispatcher -------------------------------------------------------
+# -- 命令分发：所有 /slash 命令在此路由 ----------------------------------------
 
 def _handle_command(root: Path, line: str) -> bool:
     try:

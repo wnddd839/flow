@@ -1,4 +1,7 @@
-"""Lightweight local change records for AgentFlow."""
+"""轻量本地变更记录：``.agentflow/changes/<id>/README.md``。
+
+创建变更时会设为 ``state.yaml`` 里的 ``active_change``，便于多步骤任务在工具间切换时对齐范围。
+"""
 
 from __future__ import annotations
 

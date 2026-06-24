@@ -1,16 +1,15 @@
-"""One-shot interactive setup: pick agents, then initialize in a single step.
+"""一次性设置：勾选 Agent → 写全局配置 → init 项目（``flow setup`` / 裸 ``flow init``）。
 
-This wraps the existing editor selection and project init into a single flow
-so the user does not need to call ``/editors`` (toggle one by one) followed by
-``/init`` (separate step). It uses ``prompt_toolkit``'s ``checkboxlist_dialog``
-for arrow-key + space-bar multiselect, which is already a project dependency.
+## 流程
 
-Public entry points:
+1. ``pick_editors_interactive`` — checkbox 多选（prompt_toolkit）
+2. 持久化到 ``~/.agentflow/editors.yaml``（**替换**全局 enabled 列表）
+3. 调用 ``core.init_project`` 在当前项目落地文件
 
-- :func:`pick_editors_interactive` -- show the multiselect dialog and return the
-  chosen editor names (or ``None`` when cancelled).
-- :func:`run_quick_setup` -- orchestrate the full "select -> persist -> init ->
-  sync" flow and return a small result dict for the caller to render.
+## 注意
+
+- 取消或空选不写任何文件
+- ``picker`` 参数可注入，供测试绕过真实 TTY 对话框
 """
 
 from __future__ import annotations

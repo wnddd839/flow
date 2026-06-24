@@ -1,4 +1,16 @@
-"""Text templates for AgentFlow project scaffolding."""
+"""生成 AgentFlow 脚手架用的**文本模板**（只产字符串，不写磁盘）。
+
+## 职责
+
+- ``constitution``、``state``、``skill_index``、各平台 ``prompt`` / ``interface`` 等
+- ``thin_entrypoint`` — 各 AI 工具目录下的薄 SKILL.md 内容
+- ``AGENTFLOW_GENERATED_MARKER`` — 标记可安全删除的生成文件（``apply_editors`` 清理时用）
+
+## 与其它模块
+
+- ``core.init_project``、``repair``、``editors.apply_editors`` 调用此处取内容后写入项目
+- 改模板不会自动更新老项目已有文件，需 ``flow repair`` 或 ``--force`` 重建
+"""
 
 from __future__ import annotations
 

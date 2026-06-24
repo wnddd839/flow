@@ -1,20 +1,26 @@
-"""Editor catalog and user-level editor selection for AgentFlow.
+"""AI 编辑器（Agent）目录与用户级启用配置。
 
-Flow generates a thin entrypoint file inside each editor's expected skill
-folder so that when you open a project in that editor, it picks up the same
-canonical context. Earlier versions wrote all six folders by default; this
-module makes the set user-configurable, persisted at user level, and adds
-support for custom editors.
+## 职责
 
-Configuration file: ``~/.agentflow/editors.yaml``::
+为 Codex / Cursor / Qoder 等工具在项目里生成**薄入口文件**（指向 ``.agentflow/``），
+避免在每个工具里各写一套规则。
 
-    enabled:
-      - codex
-      - claude
-    custom:
-      myeditor:
-        display: "My Editor"
-        path: ".myeditor/skills/agentflow/SKILL.md"
+## 配置位置（重要：全局）
+
+``~/.agentflow/editors.yaml``::
+
+    enabled: [qoder, cursor]   # 全局启用列表，影响所有项目的 doctor 与 apply
+    custom:                    # 自定义编辑器入口路径
+
+## 关键函数
+
+- ``get_enabled_editors`` — 当前启用的编辑器列表
+- ``apply_editors``       — 按配置创建/清理项目内的薄入口（禁用时不删用户自有文件）
+- ``save_editor_config``  — 写回全局 yaml
+
+## 常见误区
+
+在 A 项目 setup 里取消勾选 Cursor，会改掉**全局**配置，B 项目的 Cursor 入口也可能被移除。
 """
 
 from __future__ import annotations

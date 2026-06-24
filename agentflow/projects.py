@@ -1,10 +1,7 @@
-"""Registered project tracking for AgentFlow.
+"""已注册项目列表（``~/.agentflow/projects.yaml``），用于批量操作。
 
-A registered project is one Flow knows about so it can run batch operations
-(re-link the global skill folder, refresh the skill index) without you having
-to walk into each project. The registry lives at user level::
-
-    ~/.agentflow/projects.yaml
+``register_project`` 把当前目录记入列表；``sync_all_projects`` 对每个已注册且含 ``.agentflow/`` 的项目
+重新链接全局 skill 并刷新索引。适合本机多仓库共用同一套全局 skill。
 """
 
 from __future__ import annotations

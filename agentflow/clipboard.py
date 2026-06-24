@@ -1,4 +1,8 @@
-"""Best-effort clipboard helpers without third-party dependencies."""
+"""剪贴板 best-effort 复制（零第三方依赖）。
+
+按平台调用 ``clip`` / ``pbcopy`` / ``wl-copy`` 等；失败则静默，由调用方照常打印正文。
+成功时 CLI 在 stderr 输出 ``Copied to clipboard.``，避免污染 stdout 管道。
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,24 @@
-"""Global skill registry and installer helpers for AgentFlow."""
+"""全局 Skill 包管理（离线安装、锁定、同步到项目索引）。
+
+## 目录布局
+
+``~/.agentflow/``::
+
+    config.yaml        # skill 根目录列表
+    skills/            # 已安装的 SKILL.md 包
+    skills.lock.yaml   # 安装来源记录
+    cache/             # npm 等下载缓存
+
+## 职责
+
+- 从 npm / GitHub / 本地 / zip / npx 安装 skill 到全局目录
+- ``sync_project_skill_index`` — 刷新项目 ``.agentflow/skills/SKILL.md`` 索引
+- ``link_global_skills_dir``   — 在项目里链到全局目录（符号链接或回退方案）
+
+## 被谁调用
+
+``cli`` / ``repl`` 的 ``/skills``、``/sync``、``/npm`` 等命令；``core.init_project`` 初始化时也会尝试链接。
+"""
 
 from __future__ import annotations
 

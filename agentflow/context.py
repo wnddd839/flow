@@ -1,4 +1,8 @@
-"""Context snapshot generation for no-API handoffs between coding tools."""
+"""项目交接快照：生成 ``FLOW_CONTEXT.md``（无需 API，复制粘贴到另一个工具）。
+
+汇总：项目类型、git 状态、doctor 结果、``.agentflow/state.yaml``、建议验证命令。
+``save_context`` 返回 ``path`` 与 ``content``；CLI/REPL 会把 content 尝试写入剪贴板。
+"""
 
 from __future__ import annotations
 

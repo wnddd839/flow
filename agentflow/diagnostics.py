@@ -1,4 +1,8 @@
-"""No-API local diagnostics for Flow."""
+"""本地环境诊断（不调用任何 AI API）。
+
+- ``detect_tools`` — 检查 PATH 上是否存在 codex/cursor/qoder 等 CLI
+- ``collect_diagnostics`` — 合并 doctor 结果与工具探测，供 ``flow doctor`` / ``flow tools`` 展示
+"""
 
 from __future__ import annotations
 

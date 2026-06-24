@@ -1,4 +1,8 @@
-"""Read and update the small AgentFlow state file."""
+"""读写 ``.agentflow/state.yaml``（当前阶段、目标、下一步）。
+
+字段见 ``STATE_FIELDS``。被 ``changes``、``cli state``、``snapshot`` 等更新；
+AI 工具交接时应先读此文件了解会话进度。
+"""
 
 from __future__ import annotations
 
