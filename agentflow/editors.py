@@ -1,59 +1,47 @@
-"""AI 编辑器（Agent）目录与用户级启用配置。
-
-## 职责
-
-为 Codex / Cursor / Qoder 等工具在项目里生成**薄入口文件**（指向 ``.agentflow/``），
-避免在每个工具里各写一套规则。
-
-## 配置位置（重要：全局）
-
-``~/.agentflow/editors.yaml``::
-
-    enabled: [qoder, cursor]   # 全局启用列表，影响所有项目的 doctor 与 apply
-    custom:                    # 自定义编辑器入口路径
-
-## 关键函数
-
-- ``get_enabled_editors`` — 当前启用的编辑器列表
-- ``apply_editors``       — 按配置创建/清理项目内的薄入口（禁用时不删用户自有文件）
-- ``save_editor_config``  — 写回全局 yaml
-
-## 常见误区
-
-在 A 项目 setup 里取消勾选 Cursor，会改掉**全局**配置，B 项目的 Cursor 入口也可能被移除。
-"""
+"""AI 编辑器薄入口配置（``~/.agentflow/editors.yaml``）。"""
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Iterable
 
-from .skills import agentflow_home
+from . import templates
 
 
 EDITOR_CONFIG_FILE = "editors.yaml"
 
 
+def agentflow_home(home: str | Path | None = None) -> Path:
+    if home is not None:
+        return Path(home)
+    configured = os.environ.get("AGENTFLOW_HOME")
+    if configured:
+        return Path(configured)
+    return Path.home() / ".agentflow"
+
+
 @dataclass(frozen=True)
 class EditorSpec:
-    """Describes one editor's thin entrypoint."""
-
     name: str
     display: str
     entrypoint: str
     custom: bool = False
 
 
-# Built-in editors. Custom ones are merged from the user config.
-KNOWN_EDITORS: dict[str, EditorSpec] = {
-    "codex": EditorSpec("codex", "Codex", ".codex/skills/agentflow/SKILL.md"),
-    "claude": EditorSpec("claude", "Claude Code", ".claude/skills/agentflow/SKILL.md"),
-    "cursor": EditorSpec("cursor", "Cursor", ".cursor/skills/agentflow/SKILL.md"),
-    "kiro": EditorSpec("kiro", "Kiro", ".kiro/steering/agentflow.md"),
-    "qoder": EditorSpec("qoder", "Qoder", ".qoder/skills/agentflow/SKILL.md"),
-    "antigravity": EditorSpec("antigravity", "Antigravity", ".agent/skills/agentflow/SKILL.md"),
-}
+def _builtin_editors() -> dict[str, EditorSpec]:
+    return {
+        name: EditorSpec(
+            name=name,
+            display=templates.PLATFORM_DISPLAY[name],
+            entrypoint=templates.PLATFORM_ENTRYPOINTS[name],
+        )
+        for name in templates.PLATFORM_DISPLAY
+    }
+
+
+KNOWN_EDITORS: dict[str, EditorSpec] = _builtin_editors()
 
 
 # -- Persistence --------------------------------------------------------------
@@ -139,9 +127,8 @@ def save_editor_config(
 
 
 def all_editors(home: str | Path | None = None) -> dict[str, EditorSpec]:
-    """Return the union of built-in and user-defined editors."""
     config = load_editor_config(home)
-    catalog = dict(KNOWN_EDITORS)
+    catalog = _builtin_editors()
     for name, spec in config["custom"].items():
         catalog[name] = EditorSpec(
             name=name,
@@ -267,10 +254,11 @@ def apply_editors(
         if target.exists() and not force:
             kept.append(spec.entrypoint)
             continue
-        target.write_text(
-            templates.thin_entrypoint(spec.name, display=spec.display),
-            encoding="utf-8",
-        )
+        if spec.name == "codex":
+            content = templates.root_agents_pointer()
+        else:
+            content = templates.thin_entrypoint(spec.name, display=spec.display)
+        target.write_text(content, encoding="utf-8")
         created.append(spec.entrypoint)
 
     catalog = all_editors(home)
@@ -356,6 +344,8 @@ def _is_agentflow_entrypoint(path: Path) -> bool:
     # New marker present?
     from .templates import AGENTFLOW_GENERATED_MARKER
     if AGENTFLOW_GENERATED_MARKER in content:
+        return True
+    if "本项目规范见 `.agentflow/AGENTS.md`" in content:
         return True
     # Legacy detection: files generated before the marker was added.
     if "# AgentFlow for" in content and "thin platform entrypoint" in content:

@@ -1,4 +1,0 @@
-provider: "openai-compatible"
-model: "gpt-5.2"
-api_key_env: "AGENTFLOW_API_KEY"
-mode: "offline-by-default"

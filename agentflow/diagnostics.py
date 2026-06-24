@@ -1,8 +1,4 @@
-"""本地环境诊断（不调用任何 AI API）。
-
-- ``detect_tools`` — 检查 PATH 上是否存在 codex/cursor/qoder 等 CLI
-- ``collect_diagnostics`` — 合并 doctor 结果与工具探测，供 ``flow doctor`` / ``flow tools`` 展示
-"""
+"""本地环境诊断（不调用 AI API）。"""
 
 from __future__ import annotations
 
@@ -44,8 +40,6 @@ class ToolInfo:
 def detect_tools(
     path_resolver: Callable[[str], str | None] = shutil.which,
 ) -> list[ToolInfo]:
-    """Detect known local AI coding tools without invoking them."""
-
     tools: list[ToolInfo] = []
     for command, label in KNOWN_TOOLS:
         path = path_resolver(command) or ""
@@ -65,17 +59,19 @@ def collect_diagnostics(
     project_dir: str | Path,
     home: str | Path | None = None,
 ) -> list[DiagnosticItem]:
-    """Collect local diagnostics without calling any API."""
-
     root = Path(project_dir)
     report = doctor_project(root, home=home)
     items: list[DiagnosticItem] = []
 
     if report["ok"]:
-        items.append(DiagnosticItem("AgentFlow", "project files", "ok", "all required files exist"))
+        items.append(
+            DiagnosticItem("AgentFlow", "spec skeleton", "ok", "all required files exist")
+        )
     else:
         for missing in report["missing"]:
-            items.append(DiagnosticItem("AgentFlow", missing, "missing", "run `flow repair`"))
+            items.append(
+                DiagnosticItem("AgentFlow", missing, "missing", "run `flow init` or `flow check`")
+            )
 
     for tool in detect_tools():
         message = tool.path or "not found on PATH"
