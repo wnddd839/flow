@@ -1,21 +1,8 @@
-"""生成 AgentFlow 脚手架用的**文本模板**（只产字符串，不写磁盘）。
-
-## 职责
-
-- ``constitution``、``state``、``skill_index``、各平台 ``prompt`` / ``interface`` 等
-- ``thin_entrypoint`` — 各 AI 工具目录下的薄 SKILL.md 内容
-- ``AGENTFLOW_GENERATED_MARKER`` — 标记可安全删除的生成文件（``apply_editors`` 清理时用）
-
-## 与其它模块
-
-- ``core.init_project``、``repair``、``editors.apply_editors`` 调用此处取内容后写入项目
-- 改模板不会自动更新老项目已有文件，需 ``flow repair`` 或 ``--force`` 重建
-"""
+"""项目规范文档模板（只产字符串，不写磁盘）。"""
 
 from __future__ import annotations
 
 from textwrap import dedent
-from typing import Iterable
 
 
 DEFAULT_PLATFORMS = ("codex", "claude", "cursor", "kiro", "qoder", "antigravity")
@@ -30,470 +17,270 @@ PLATFORM_DISPLAY = {
 }
 
 PLATFORM_ENTRYPOINTS = {
-    "codex": ".codex/skills/agentflow/SKILL.md",
-    "claude": ".claude/skills/agentflow/SKILL.md",
-    "cursor": ".cursor/skills/agentflow/SKILL.md",
+    "codex": "AGENTS.md",
+    "claude": "CLAUDE.md",
+    "cursor": ".cursor/rules/agentflow.mdc",
     "kiro": ".kiro/steering/agentflow.md",
     "qoder": ".qoder/skills/agentflow/SKILL.md",
     "antigravity": ".agent/skills/agentflow/SKILL.md",
 }
 
-
-def constitution(project_name: str) -> str:
-    return dedent(
-        f"""\
-        # {project_name} AI Coding Constitution
-
-        ## Purpose
-
-        This file defines the project rules every AI coding assistant must follow.
-        Keep it short, concrete, and current. The goal is repeatable engineering,
-        not clever one-off prompting.
-
-        ## Working Agreement
-
-        - Read `.agentflow/README.md`, `.agentflow/state.yaml`, and
-          `.agentflow/skills/SKILL.md` before project work.
-        - Restate the target in 1-2 lines before making changes.
-        - Choose the smallest matching workflow: clarify, spec, plan, implement,
-          verify, or finish.
-        - Prefer deterministic local checks and scripts before model judgment.
-        - Keep implementation scoped to the active request.
-        - Do not modify unrelated files.
-        - Do not invent new architecture, tools, or abstractions unless the task
-          requires them and the reason is written down.
-
-        ## Task Gates
-
-        Before implementation, the agent must know:
-
-        - scope: what will change
-        - non-goals: what will not change
-        - acceptance: how completion will be judged
-        - likely files or areas touched
-
-        If any gate is unclear, stop and ask for clarification or create a
-        lightweight spec before coding.
-
-        ## Project Boundaries
-
-        - Define what this project is responsible for.
-        - Define what this project deliberately does not do.
-        - Define directories or files that require extra caution.
-
-        ## Verification Ladder
-
-        Use the closest meaningful check. Move down the ladder when risk is high:
-
-        1. Static sanity: read the affected files and existing docs.
-        2. Compile/typecheck/lint: run the project command if available.
-        3. Unit tests: run focused tests first, broader tests when risk expands.
-        4. Integration or CLI/UI smoke test: exercise the changed workflow.
-        5. Manual acceptance notes: only when automation is unavailable.
-
-        Do not claim success without verification evidence. If verification is
-        blocked, say exactly what blocked it and what remains risky.
-
-        ## Quality Cleanup Pass
-
-        Before finishing, remove obvious AI slop:
-
-        - unused code, dead branches, debug prints, and stale comments
-        - overbroad abstractions for small local changes
-        - duplicated helper logic that already exists nearby
-        - TODOs that are not explicitly part of the accepted scope
-
-        Prefer the repository's existing patterns over new style.
-
-        ## Completion Report
-
-        Every implementation handoff must include:
-
-        - files changed
-        - commands run
-        - verification result
-        - acceptance evidence
-        - unresolved risks
-        - recommended next step
-        """
-    )
-
-
-def config(api_key_env: str, provider: str, model: str) -> str:
-    return dedent(
-        f"""\
-        provider: "{provider}"
-        model: "{model}"
-        api_key_env: "{api_key_env}"
-        mode: "offline-by-default"
-        """
-    )
-
-
-def state(project_name: str) -> str:
-    return dedent(
-        f"""\
-        project: "{project_name}"
-        phase: "initialized"
-        current_goal: ""
-        active_change: ""
-        next_action: "Run `flow instructions` and paste the output into your AI coding tool."
-        blocked: false
-        """
-    )
-
-
-def skill_index(
-    global_skills: Iterable[object] | None = None,
-    skill_roots: Iterable[object] | None = None,
-) -> str:
-    global_section = _global_skill_section(global_skills, skill_roots)
-    return dedent(
-        """\
-        # AgentFlow Skill Index
-
-        This is the single source of truth for workflow skills in this project.
-        Platform-specific skill files should stay thin and point back here.
-
-        ## Always Start Here
-
-        1. Read `.agentflow/constitution.md`.
-        2. Read `.agentflow/state.yaml`.
-        3. Restate the task, scope, non-goals, and acceptance criteria.
-        4. Select the skill that matches the current phase and request.
-        5. Keep implementation scoped to the active change.
-        6. End with verification evidence or explicit unresolved risk.
-
-        ## Available Skills
-
-        - `brainstorm`: clarify goals, scope, non-goals, and success criteria.
-        - `spec`: create proposal/design artifacts before risky or ambiguous work.
-        - `plan`: turn an approved design into small executable tasks.
-        - `implement`: execute one scoped task at a time.
-        - `verify`: run tests, inspect output, and collect acceptance evidence.
-        - `finish`: summarize changes, risks, evidence, and next action.
-
-        ## Routing Rules
-
-        - New project or unclear goal: use `brainstorm`, then `spec`.
-        - Security, architecture, data model, or cross-module work: use `spec`.
-        - Small localized bugfix: use `implement`, then `verify`.
-        - Compiler, typecheck, lint, CI, or GitHub Actions failure: reproduce
-          locally if possible, then use `verify` before broad edits.
-        - UI change: use `implement`, then run the closest UI or browser smoke.
-        - CLI change: use `implement`, then run a command-level smoke test.
-        - Testing, hardening, or regression work: use `verify`.
-        - End of a session: use `finish`.
-
-        ## Verification Rules
-
-        - Prefer focused checks first, then broader checks when shared behavior changed.
-        - If a check fails, fix the root cause or report the exact blocker.
-        - Do not mark work complete from visual inspection alone when tests exist.
-
-        ## Quality Cleanup Rules
-
-        - Do a deslop pass before `finish`: remove unused code, debug output,
-          stale comments, accidental duplication, and needless abstractions.
-        - Preserve existing style and module boundaries.
-        - Do not leave TODOs unless the user explicitly accepted them.
-        """
-    ) + global_section
-
-
-def skill(name: str, purpose: str) -> str:
-    return dedent(
-        f"""\
-        # {name.title()} Skill
-
-        ## Purpose
-
-        {purpose}
-
-        ## Required Inputs
-
-        - `.agentflow/constitution.md`
-        - `.agentflow/state.yaml`
-        - `.agentflow/skills/SKILL.md`
-        - Current user request or active change folder
-
-        ## Workflow
-
-        1. Confirm the task, scope, non-goals, and acceptance criteria.
-        2. Read the smallest relevant set of files before editing.
-        3. Make the narrowest change that satisfies the acceptance criteria.
-        4. Run the closest meaningful verification command.
-        5. Do a quality cleanup pass before reporting completion.
-
-        ## Stop Conditions
-
-        - The request needs a spec or plan before safe implementation.
-        - The task would require touching unrelated modules.
-        - Verification cannot run and the risk is material.
-        - Required files, credentials, or commands are unavailable.
-
-        ## Output Contract
-
-        - State what you did.
-        - State what evidence exists, including exact commands when available.
-        - State what remains unclear or risky.
-        - State the next recommended action.
-        """
-    )
-
-
-def prompt_template(platform: str) -> str:
-    display = PLATFORM_DISPLAY.get(platform, platform.title())
-    return dedent(
-        f"""\
-        # {display} Handoff Template
-
-        Read these first:
-
-        - `.agentflow/constitution.md`
-        - `.agentflow/state.yaml`
-        - `.agentflow/skills/SKILL.md`
-
-        Work only on the scoped request. Do not broaden the task.
-
-        Before editing:
-
-        - restate the target
-        - identify scope, non-goals, and acceptance criteria
-        - choose the matching AgentFlow skill
-
-        Before finishing:
-
-        - run the closest meaningful verification command
-        - remove debug output, unused code, stale comments, and needless abstraction
-        - report files changed, commands run, verification result, acceptance
-          evidence, unresolved risks, and recommended next step
-        """
-    )
-
-
-def interfaces_readme() -> str:
-    return dedent(
-        """\
-        # AgentFlow Interfaces
-
-        This directory is the unified interface layer for AI coding tools.
-        Platform-specific entrypoints should stay thin and point here.
-
-        ## Canonical Files
-
-        - `.agentflow/constitution.md`: project rules and boundaries.
-        - `.agentflow/state.yaml`: current phase, goal, and next action.
-        - `.agentflow/skills/SKILL.md`: skill index and routing rules.
-        - `.agentflow/interfaces/*.md`: platform-specific handoff notes.
-
-        ## Rule
-
-        Update the canonical files first. Treat tool-specific folders such as
-        `.codex/`, `.claude/`, `.cursor/`, `.kiro/`, `.qoder/`, and `.agent/`
-        as adapters, not the source of truth.
-
-        ## Adapter Contract
-
-        Each platform adapter should:
-
-        - point back to the canonical `.agentflow/` files
-        - avoid duplicating long rules that can drift
-        - require verification evidence before completion
-        - preserve project boundaries and existing style
-        """
-    )
-
-
-def platform_interface(platform: str) -> str:
-    display = PLATFORM_DISPLAY.get(platform, platform.title())
-    return dedent(
-        f"""\
-        # {display} Interface
-
-        Use this file as the platform-facing adapter for {display}.
-
-        ## Startup Contract
-
-        1. Read `.agentflow/interfaces/README.md`.
-        2. Read `.agentflow/constitution.md`.
-        3. Read `.agentflow/state.yaml`.
-        4. Read `.agentflow/skills/SKILL.md`.
-        5. Select the matching skill before taking action.
-
-        ## Completion Contract
-
-        Finish with:
-
-        - files changed
-        - commands run
-        - verification result
-        - acceptance evidence
-        - unresolved risk
-        - next recommended action
-
-        If checks were not run, say why. Do not claim success without evidence.
-        """
-    )
+AGENTFLOW_GENERATED_MARKER = "<!-- Generated by AgentFlow. Safe to delete. -->"
 
 
 def agents_md() -> str:
     return dedent(
         """\
-        # AgentFlow Entry
+        # AGENTS.md
 
-        Before doing project work, read:
+        本文件是本项目的**唯一总入口**。开工前必读，每次必读。
 
-        - `.agentflow/interfaces/README.md`
-        - `.agentflow/constitution.md`
-        - `.agentflow/state.yaml`
-        - `.agentflow/skills/SKILL.md`
+        ## 项目文档（位于 `.agentflow/`）
 
-        Follow the skill routing rules in `.agentflow/skills/SKILL.md`.
-        Do not start implementation when the request needs a spec or plan first.
-        Keep edits scoped. Prefer deterministic checks. Finish with verification
-        evidence, acceptance notes, unresolved risks, and next action.
+        本项目的规范分散在以下几个文件，**每个文件边界严格不重叠**。
+        需要时按索引去读对应文件，不要把所有信息都塞进本文件：
+
+        - [`project.md`](project.md) — 项目是什么：定位、技术栈、架构、运行方式
+        - [`conventions.md`](conventions.md) — 怎么写代码：命名、结构、风格、禁用模式
+        - [`business.md`](business.md) — 业务是什么：领域概念、核心流程、术语表
+        - [`pitfalls.md`](pitfalls.md) — 踩过的坑：历史教训、不再重蹈的决策
+        - [`skills/README.md`](skills/README.md) — 专项 skill 路由表
+
+        ## 强制工作纪律
+
+        1. **开工前**：通读 `.agentflow/` 下所有 `.md`。重述目标、范围、非目标后再动手。
+        2. **范围最小**：只改与当前请求相关的文件。不碰无关模块。
+        3. **验证优先**：改完先跑可用的检查（类型/测试/lint），再报告完成。
+        4. **交接标准**：完成时报告——改了哪些文件、跑了什么命令、结果、遗留风险、下一步。
+
+        ## 文档维护契约（强制，不可忽略）
+
+        - **首次接手**：若 `project.md` 等仍有未填章节，你的**第一项任务**是
+          分析代码库并填写，然后再做用户要求的事。按每个文件顶部的边界声明填写。
+        - **改动后更新**：完成一个有意义的改动后，更新对应文档。
+          改了架构→`project.md`；定了新规范→`conventions.md`；
+          理解了新业务→`business.md`；踩了坑→`pitfalls.md`。
+        - **不重复**：每条信息**只出现在一个文档里**。写到一半发现「别处也有」，
+          说明放错位置了——按边界声明判断归属，只保留一处。
+        - **宁缺毋滥**：某个文档可以很短，但不要为「完整」而堆砌。空章节比错位章节好。
+        - **以代码为准**：文档与代码冲突时，以代码为准，当场修正文档。
+        - **过时即删**：过时的文档比没有文档更糟——宁可删，不要留错的。
+
+        ## Skill 路由
+
+        涉及专项操作时，**必须先查** [`skills/README.md`](skills/README.md)
+        的路由表，匹配则先读对应 skill 再动手。
         """
     )
 
 
-AGENTFLOW_GENERATED_MARKER = "<!-- Generated by AgentFlow. Safe to delete. -->"
-
-
-def thin_entrypoint(platform: str, display: str | None = None) -> str:
-    display_name = display or PLATFORM_DISPLAY.get(platform, platform.title())
+def root_agents_pointer() -> str:
     return dedent(
         f"""\
         {AGENTFLOW_GENERATED_MARKER}
-        # AgentFlow for {display_name}
+        # AGENTS.md
 
-        This is a thin platform entrypoint. The canonical workflow lives in:
-
-        - `.agentflow/interfaces/README.md`
-        - `.agentflow/interfaces/{platform}.md`
-        - `.agentflow/constitution.md`
-        - `.agentflow/state.yaml`
-        - `.agentflow/skills/SKILL.md`
-
-        Read those files before project work and follow the selected skill.
-        Do not claim completion without verification evidence.
+        本项目规范见 `.agentflow/AGENTS.md`，开工前先读。
         """
     )
 
 
-def agentflow_readme() -> str:
+def project_skeleton() -> str:
+    return _skeleton(
+        title="项目说明",
+        writes="这个项目【是什么】：一句话定位、技术栈、整体架构、怎么启动运行",
+        not_writes=(
+            "怎么写代码（→ conventions.md）、业务规则与术语（→ business.md）、"
+            "踩过的坑（→ pitfalls.md）、专项操作流程（→ skills/）"
+        ),
+        sections=[
+            (
+                "一句话定位",
+                "用一句话说清这个项目是做什么的、解决什么问题。\n"
+                "  例：一个离线 Python CLI，给多个 AI 编码工具搭统一的项目规范层。",
+            ),
+            (
+                "技术栈",
+                "列出语言、核心框架、关键依赖、运行环境。\n"
+                "  基于真实的 pyproject.toml / package.json / Cargo.toml 等填写，不要猜。",
+            ),
+            (
+                "架构概览",
+                "描述主要模块、分层方式、数据流向。指向关键目录即可，\n"
+                "  不要逐文件罗列。",
+            ),
+            (
+                "启动与运行",
+                "怎么安装依赖、怎么启动、怎么跑测试。给出真实命令。\n"
+                "  只写「怎么跑」，不写「代码该怎么组织」（那属于 conventions.md）。",
+            ),
+        ],
+    )
+
+
+def conventions_skeleton() -> str:
+    return _skeleton(
+        title="编码规范",
+        writes="这个项目【怎么写代码】：命名、结构、风格、禁用模式",
+        not_writes=(
+            "项目是什么/怎么运行（→ project.md）、业务规则（→ business.md）、"
+            "历史踩坑（→ pitfalls.md）"
+        ),
+        sections=[
+            (
+                "命名约定",
+                "文件、函数、变量、类的命名规则。只写本项目特有的约定，\n"
+                "  语言通用惯例（如 Python 下划线）不必赘述。",
+            ),
+            (
+                "代码结构",
+                "模块如何组织、什么放哪里、新增功能该加在哪个目录。\n"
+                "  只写结构规则，不重复 project.md 的架构概览。",
+            ),
+            (
+                "风格与格式",
+                "缩进、行长、import 顺序、注释密度等本项目坚持的风格。\n"
+                "  有 lint/format 配置就直接指向它，别抄一遍。",
+            ),
+            (
+                "禁用模式",
+                "本项目明确【不】做的事。例：不引入新依赖、不写 God Object、\n"
+                "  不在业务层用 print。给理由。",
+            ),
+        ],
+    )
+
+
+def business_skeleton() -> str:
+    return _skeleton(
+        title="业务说明",
+        writes="这个项目的【业务】：领域概念、核心流程、术语表",
+        not_writes=(
+            "技术实现/架构（→ project.md）、代码风格（→ conventions.md）、"
+            "技术踩坑（→ pitfalls.md）"
+        ),
+        sections=[
+            (
+                "核心概念",
+                "这个领域里最关键的几个名词/实体，用一两句话解释。\n"
+                "  例：订单、履约、结算。解释业务含义，不解释数据结构。",
+            ),
+            (
+                "主要流程",
+                "业务上「一件事从头到尾怎么走」。用步骤或流程描述，\n"
+                "  不贴代码。",
+            ),
+            (
+                "术语表",
+                "项目里出现的、容易误解的业务术语。一词一行解释。\n"
+                "  只收业务术语，不收通用技术词。",
+            ),
+        ],
+    )
+
+
+def pitfalls_skeleton() -> str:
+    return _skeleton(
+        title="历史踩坑与教训",
+        writes="这个项目【踩过的坑】：历史教训、不再重蹈的决策、敏感区",
+        not_writes=(
+            "当前架构（→ project.md）、编码规范（→ conventions.md）、"
+            "业务规则（→ business.md）。这里只记「过去犯过的错」。"
+        ),
+        sections=[
+            (
+                "踩过的坑",
+                "记录过去遇到的问题和根因，以及如何避免再犯。\n"
+                "  格式：现象 / 根因 / 对策。一条一个。",
+            ),
+            (
+                "不再重蹈的决策",
+                "曾经考虑过、最终否决的方案，以及否决理由。\n"
+                "  防止后人（或 AI）再次踩进同一个坑。",
+            ),
+            (
+                "敏感区",
+                "改动风险高的地方、碰之前要三思的区域。\n"
+                "  说明为什么敏感，不写怎么改（那是 conventions 的事）。",
+            ),
+        ],
+    )
+
+
+def skills_readme() -> str:
     return dedent(
-        """\
-        # AgentFlow
+        f"""\
+        # Skill 路由
 
-        This project uses AgentFlow to provide a unified context layer for
-        AI coding assistants.
+        {AGENTFLOW_GENERATED_MARKER}
 
-        ## Start Here
+        当任务匹配下表关键词时，**必须先读对应 skill 再动手**：
 
-        1. Read `.agentflow/constitution.md` for project rules and boundaries.
-        2. Read `.agentflow/state.yaml` for the current phase and next action.
-        3. Read `.agentflow/skills/SKILL.md` for workflow routing rules.
-        4. Read `.agentflow/interfaces/README.md` for platform adapter notes.
+        | 任务关键词 | 先读 |
+        |-----------|------|
+        | <!-- 例：分页/列表/刷新 --> | <!-- skills/pagination.md --> |
+        | <!-- 例：鉴权/登录/token --> | <!-- skills/auth.md --> |
 
-        ## Rule
-
-        The `.agentflow/` directory is the source of truth.
-        Tool-specific folders (`.codex/`, `.claude/`, `.cursor/`, `.kiro/`,
-        `.qoder/`, `.agent/`) are thin adapters that point back here.
-
-        Do not start implementation until the current task has clear scope
-        and acceptance criteria.
-
-        ## Work Loop
-
-        1. Clarify scope, non-goals, and acceptance criteria.
-        2. Pick the smallest matching workflow from `.agentflow/skills/SKILL.md`.
-        3. Implement only the active request.
-        4. Run the closest meaningful verification.
-        5. Do a quality cleanup pass.
-        6. Finish with evidence, risks, and next step.
-
-        ## Evidence Standard
-
-        A task is not done because code changed. It is done when the agent can
-        show what changed, what was checked, what passed or failed, and what risk
-        remains.
+        <!--
+        维护规则（首个接手的 agent 填写）：
+        - 扫描项目后，把本项目的真实 skill 触发条件填入上表。
+        - 触发词写【祈使句/具体词】，不要写模糊描述。
+          差：「处理分页」  好：「任务涉及 分页/列表刷新/页码 时」
+        - 本项目暂无专项 skill 时，保留表头，表体留空即可。
+        -->
         """
     )
 
 
-def _global_skill_section(
-    global_skills: Iterable[object] | None,
-    skill_roots: Iterable[object] | None,
-) -> str:
-    roots = list(skill_roots or [])
-    skills = list(global_skills or [])
-    if not roots and not skills:
-        return ""
+def thin_entrypoint(platform: str, display: str | None = None) -> str:
+    _ = display or PLATFORM_DISPLAY.get(platform, platform.title())
+    return dedent(
+        f"""\
+        {AGENTFLOW_GENERATED_MARKER}
+        本项目规范见 `.agentflow/AGENTS.md`，开工前先读。
+        """
+    )
 
+
+def _skeleton(
+    title: str,
+    writes: str,
+    not_writes: str,
+    sections: list[tuple[str, str]],
+) -> str:
     lines = [
+        f"# {title}",
         "",
-        "## Global Skill Roots",
+        "<!-- ═══════════════════════════════════════════════════════════",
+        "     本文件边界（不可删除，不可改写）",
+        f"     ✅ 只写：{writes}",
+        f"     ❌ 不写：{not_writes}",
+        "     判断标准：如果一段内容换到别的项目还能用，它就不属于这里。",
+        "     ═══════════════════════════════════════════════════════════ -->",
+        "",
+        "<!-- 维护契约：由首个接触本项目的 AI 编码助手分析代码后填写；",
+        "     后续每次接手时核对，与代码不符就修正。不要删除章节标题。 -->",
         "",
     ]
-    if roots:
-        for root in roots:
-            lines.append(f"- `{root}`")
-    else:
-        lines.append("- No global skill root configured.")
-
-    lines.extend(
-        [
-            "",
-            "## Global Skills",
-            "",
-            "When a request matches one of these skills, read the referenced",
-            "`SKILL.md` before taking action. If the file is outside the current",
-            "workspace and cannot be read, say so and continue with the closest",
-            "project-local workflow skill.",
-            "",
-        ]
-    )
-
-    if not skills:
-        lines.append("- No global skills installed yet. Use `flow skills import <path>` or `npm <package>`.")
-    else:
-        for skill in skills:
-            name = getattr(skill, "name", "unknown")
-            description = getattr(skill, "description", "")
-            path = getattr(skill, "path", "")
-            lines.append(f"- `{name}`")
-            if description:
-                lines.append(f"  - Use when: {description}")
-            lines.append(f"  - Path: `{path}`")
-
-    return "\n".join(lines) + "\n"
+    for heading, hint in sections:
+        lines.extend(
+            [
+                f"## {heading}",
+                "",
+                f"<!-- {hint} -->",
+                "",
+            ]
+        )
+    return "\n".join(lines)
 
 
 AGENT_INSTRUCTIONS = dedent(
     """\
-    You are working in an AgentFlow-initialized project.
+    你正在一个 AgentFlow 初始化的项目中工作。
 
-    Before doing any project work, read:
-    - .agentflow/README.md
-    - .agentflow/constitution.md
-    - .agentflow/state.yaml
-    - .agentflow/skills/SKILL.md
-    - .agentflow/interfaces/README.md
+    开工前必读：`.agentflow/AGENTS.md`（以及其索引的其它规范文档）。
 
-    Follow the workflow rules in .agentflow/skills/SKILL.md.
-    Restate the task, scope, non-goals, and acceptance criteria before editing.
-    Do not start implementation until the current task has clear scope and acceptance criteria.
-    Prefer deterministic local checks over guessing.
-    Keep edits scoped to the active request.
-    Do a quality cleanup pass before completion.
-    When finished, report:
-    - files changed
-    - commands run
-    - verification result
-    - acceptance evidence
-    - unresolved risks
-    - recommended next step
+    遵守文档维护契约：首次接手先填未完成的骨架章节；改动后更新对应文档；
+    每条信息只出现在一个文档里；以代码为准。
     """
 )
