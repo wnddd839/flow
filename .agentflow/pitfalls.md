@@ -12,15 +12,50 @@
 
 ## 踩过的坑
 
-<!-- 记录过去遇到的问题和根因，以及如何避免再犯。
-  格式：现象 / 根因 / 对策。一条一个。 -->
+**禁用编辑器时误删用户规则文件**
+
+- 现象：关闭 Cursor 等平台后，`.cursor/rules/` 下用户自写的 `.mdc` 被删掉。
+- 根因：按目录整块删除，未区分 Flow 生成文件与用户文件。
+- 对策：`apply_editors` 仅删除含 `AGENTFLOW_GENERATED_MARKER` 或可识别薄入口文案的文件；`test_core.test_apply_editors_does_not_delete_user_files` 锁定此行为。
+
+**自定义编辑器路径可写出项目根目录**
+
+- 现象：恶意或错误的绝对路径、`..` 段可将文件写到仓库外。
+- 根因：未校验入口路径的相对性与规范化结果。
+- 对策：`_validate_relative_entrypoint` 与 `_safe_project_path` 拒绝绝对路径、`..` 及解析后落在项目外的目标。
+
+**v1 工作流过重、与「只 init 骨架」定位冲突**
+
+- 现象：早期版本含 `scan` / `ask` / `handoff` / `state.yaml` / constitution 等，用户只需规范层却被迫理解整套路由。
+- 根因：MVP 范围膨胀，混淆了「文档初始化器」与「AI 工作流编排器」。
+- 对策：v0.4 收窄为 init + check + editors + tools + REPL；README 明确**不生成** state、handoff、skill 包管理等旧功能。新需求先对照当前定位，避免无审查地复活旧模块。
+
+**骨架模板预填项目描述**
+
+- 现象：生成物像「已经写好文档」，首个 AI 跳过分析直接信任模板正文。
+- 根因：在 `templates.py` 里写死了目标项目名或业务描述。
+- 对策：`test_skeletons_have_no_prefilled_project_content` 禁止骨架出现项目专属字符串；真实内容只写在各仓库的 `.agentflow/*.md` 实例中。
+
+**文档信息重复、边界失效**
+
+- 现象：架构写进 `business.md`，业务术语写进 `project.md`，后续两边不一致。
+- 根因：未遵守各文件顶部边界声明。
+- 对策：`AGENTS.md` 维护契约要求「每条信息只出现在一个文档里」；写文档时先对边界声明，放错就搬移而非复制。
 
 ## 不再重蹈的决策
 
-<!-- 曾经考虑过、最终否决的方案，以及否决理由。
-  防止后人（或 AI）再次踩进同一个坑。 -->
+| 曾考虑 | 否决理由 |
+|--------|----------|
+| 在 init 时交互询问业务问题 | 与「用户不填内容、AI 填骨架」原则冲突；init 必须非交互、可脚本化 |
+| 删除整个 `.cursor/` / `.claude/` 目录来清理入口 | 极易误伤用户配置；只删可识别的单文件并向上 prune 空目录，保留顶层工具目录 |
+| 把规范正文复制进每个平台入口 | 薄入口仅指针，避免六处副本漂移；完整规范只在 `.agentflow/` |
+| 在 doctor 中校验 Markdown 内容是否「填完」 | 增加主观判断与误报；doctor 只检查文件存在性 |
+| 恢复 v1 的 handoff / route 推荐 | 超出当前产品边界；需要工作流编排应另立项目或显式扩 scope |
 
 ## 敏感区
 
-<!-- 改动风险高的地方、碰之前要三思的区域。
-  说明为什么敏感，不写怎么改（那是 conventions 的事）。 -->
+- **`editors.apply_editors` 的删除逻辑**：任何改动都可能影响用户仓库内非 Flow 文件；改前必读 `test_core` 并手动验证禁用编辑器场景。
+- **`templates.py` 中 `agents_md()` 与骨架生成函数**：影响所有新 init 项目的 AI 行为契约；改措辞等于改「产品规则」，需同步测试与 README。
+- **`PLATFORM_ENTRYPOINTS`**：路径与各工具官方约定绑定；改名或换路径会导致既有用户 `flow check` 失败，需迁移说明或兼容层。
+- **`editors.yaml` 解析器**：手写 YAML 子集，非完整 PyYAML；格式扩展时要考虑旧文件向后兼容。
+- **根目录 `AGENTS.md`（Codex）**：与 Codex 生态约定相关；内容与 `root_agents_pointer()` 保持一致，避免与 `.agentflow/AGENTS.md` 职责混淆。

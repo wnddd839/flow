@@ -12,20 +12,48 @@
 
 ## 命名约定
 
-<!-- 文件、函数、变量、类的命名规则。只写本项目特有的约定，
-  语言通用惯例（如 Python 下划线）不必赘述。 -->
+- **包与模块**：`agentflow/` 下单文件单职责；文件名小写蛇形（`core.py`、`editors.py`）。
+- **公开 API**：模块级函数用动词短语（`init_project`、`doctor_project`、`apply_editors`）；CLI 子命令处理函数以 `_cmd_` 前缀（`_cmd_init`）。
+- **常量**：全大写蛇形（`BASE_REQUIRED_FILES`、`AGENTFLOW_GENERATED_MARKER`、`DEFAULT_PLATFORMS`）。
+- **内部辅助**：单下划线前缀（`_write_text`、`_safe_project_path`、`_is_agentflow_entrypoint`）。
+- **数据类**：`@dataclass(frozen=True)` 表示不可变值对象（`EditorSpec`、`DiagnosticItem`、`ToolInfo`）。
+- **CLI 程序名**：对外品牌为 `flow`；包名保持 `agentflow`，两个入口脚本等价。
 
 ## 代码结构
 
-<!-- 模块如何组织、什么放哪里、新增功能该加在哪个目录。
-  只写结构规则，不重复 project.md 的架构概览。 -->
+| 放什么 | 放哪里 |
+|--------|--------|
+| 磁盘写入 / 检查逻辑 | `core.py` |
+| 纯字符串模板（骨架、薄入口） | `templates.py` |
+| 用户级编辑器配置与入口 reconcile | `editors.py` |
+| 环境探测（PATH 工具、诊断项） | `diagnostics.py` |
+| argparse 与命令分发 | `cli.py` |
+| 交互 REPL | `repl.py` |
+| 版本号 | `__init__.py` |
+
+**新增 CLI 子命令**：在 `cli.py` 的 `_build_parser` 注册 → 实现 `_cmd_*` → 加入 `COMMANDS` 字典。
+
+**新增内置编辑器**：在 `templates.py` 同步更新 `DEFAULT_PLATFORMS`、`PLATFORM_DISPLAY`、`PLATFORM_ENTRYPOINTS`，并补充 `tests/test_init.py` 断言。
+
+**避免循环导入**：`editors.apply_editors` 等对 `templates` 使用函数内局部 import。
+
+**测试**：`tests/` 下按模块分文件；临时目录用 `tempfile.TemporaryDirectory`；CLI 集成测试通过 `subprocess` 调用 `python -m agentflow.cli`。
 
 ## 风格与格式
 
-<!-- 缩进、行长、import 顺序、注释密度等本项目坚持的风格。
-  有 lint/format 配置就直接指向它，别抄一遍。 -->
+- 文件头使用中文模块 docstring，说明模块职责。
+- 全项目 `from __future__ import annotations`。
+- 类型标注覆盖公开函数参数与返回值；`Path` 统一来自 `pathlib`。
+- 文件读写显式 `encoding="utf-8"`。
+- 用户可见输出：CLI 用 `print`；REPL 用 `rich`（`Console`、`Panel`、`Table`）。
+- 无项目级 ruff/black 配置；遵循现有 4 空格缩进与 `import` 分组习惯（标准库 → 第三方 → 本地）。
+- 模板正文用 `textwrap.dedent`，保持生成 Markdown 可读。
 
 ## 禁用模式
 
-<!-- 本项目明确【不】做的事。例：不引入新依赖、不写 God Object、
-  不在业务层用 print。给理由。 -->
+- **不引入新运行时依赖**：保持离线、轻量；新能力优先标准库，确有必要再改 `pyproject.toml` 并说明理由。
+- **不在 `templates.py` 写盘**：模板模块只返回字符串；持久化集中在 `core` / `editors`。
+- **不在骨架模板里预填目标项目内容**：`test_templates.py` 禁止骨架出现 `agentflow-mvp` 等项目专属描述；首个接手的 AI 填 `.agentflow/*.md`，不是改 `templates.py`。
+- **不删除用户自有编辑器配置**：禁用编辑器时仅删除带 `AGENTFLOW_GENERATED_MARKER` 或可识别的薄入口，不删 `.cursor/` 等顶层目录及其他用户文件。
+- **不接受越界路径**：自定义编辑器入口必须是项目内相对路径，禁止 `..` 与绝对路径（见 `editors._validate_relative_entrypoint`）。
+- **不在业务逻辑层调用 AI API**：`diagnostics` 只做本地 PATH 检测，不做网络请求。

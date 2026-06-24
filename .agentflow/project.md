@@ -12,20 +12,76 @@
 
 ## 一句话定位
 
-<!-- 用一句话说清这个项目是做什么的、解决什么问题。
-  例：一个离线 Python CLI，给多个 AI 编码工具搭统一的项目规范层。 -->
+离线 Python CLI（`flow` / `agentflow`），在任意代码仓库中生成边界严格、可自我维护的 AI 编码规范文档骨架，并为 Codex、Claude Code、Cursor 等 6 个平台写入薄入口指针。
 
 ## 技术栈
 
-<!-- 列出语言、核心框架、关键依赖、运行环境。
-  基于真实的 pyproject.toml / package.json / Cargo.toml 等填写，不要猜。 -->
+| 项 | 版本 / 说明 |
+|----|------------|
+| 语言 | Python ≥ 3.11 |
+| 运行时依赖 | `rich`（终端 UI）、`prompt_toolkit`（REPL 补全） |
+| 开发依赖 | `pytest` |
+| 打包 | `setuptools`，入口脚本 `flow` 与 `agentflow` 均指向 `agentflow.cli:main` |
+| 当前版本 | `0.4.0`（见 `agentflow/__init__.py`） |
+| 网络 | 无 API 调用、无网络依赖 |
 
 ## 架构概览
 
-<!-- 描述主要模块、分层方式、数据流向。指向关键目录即可，
-  不要逐文件罗列。 -->
+```
+agentflow/
+  cli.py          命令行入口（init / check / editors / tools / instructions）
+  core.py         init_project、doctor_project
+  templates.py    规范文档与薄入口的字符串模板（只产字符串，不写盘）
+  editors.py      编辑器配置（~/.agentflow/editors.yaml）与薄入口 reconcile
+  diagnostics.py  本地工具检测与诊断输出
+  repl.py         无参数 `flow` 时的交互工作台
+tests/            unittest / pytest 兼容测试
+```
+
+**数据流（`flow init`）：**
+
+1. `templates.py` 生成 `.agentflow/` 下 6 个规范文件内容。
+2. `editors.py` 读取/写入用户级 `editors.yaml`，决定启用哪些平台。
+3. `apply_editors` 在项目根写入各平台薄入口（Codex 为根 `AGENTS.md` 指针，其余为单行指向 `.agentflow/AGENTS.md`）。
+4. `doctor_project` 校验骨架文件 + 已启用编辑器的入口文件是否齐全。
+
+用户级配置目录：`~/.agentflow/`（可通过环境变量 `AGENTFLOW_HOME` 覆盖）。
 
 ## 启动与运行
 
-<!-- 怎么安装依赖、怎么启动、怎么跑测试。给出真实命令。
-  只写「怎么跑」，不写「代码该怎么组织」（那属于 conventions.md）。 -->
+**安装（开发模式）：**
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+**初始化当前项目规范骨架：**
+
+```bash
+flow init
+flow init --editors qoder,cursor   # 只启用指定平台
+flow init --force                  # 覆盖已有文件
+```
+
+**健康检查与诊断：**
+
+```bash
+flow check      # doctor 为别名；失败时 exit code 1
+flow tools      # 检测本机 AI CLI 是否在 PATH
+flow instructions
+```
+
+**交互工作台：**
+
+```bash
+flow            # 无参数进入 REPL：/init /check /tools /instructions /help
+```
+
+**测试：**
+
+```bash
+python -m compileall -f agentflow tests
+python -m pytest -q
+```
+
+CI（`.github/workflows/ci.yml`）在 Python 3.11 / 3.12 上执行相同 compile + pytest 流程。

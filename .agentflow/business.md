@@ -12,15 +12,53 @@
 
 ## 核心概念
 
-<!-- 这个领域里最关键的几个名词/实体，用一两句话解释。
-  例：订单、履约、结算。解释业务含义，不解释数据结构。 -->
+- **规范骨架（spec skeleton）**：`flow init` 在 `.agentflow/` 下生成的一组空文档框架，含总入口 `AGENTS.md` 与四份子文档（project / conventions / business / pitfalls）及 skill 路由表。用户不手写内容，由首个接手的 AI 分析代码后填写。
+- **文档边界**：每份 `.md` 顶部的 ✅/❌ 声明定义「写什么、不写什么」，防止所有信息堆进一个 README。
+- **文档维护契约**：写在 `AGENTS.md` 中的强制规则——首次接手先填骨架、改动后更新对应文档、信息不重复、以代码为准。
+- **薄入口（thin entrypoint）**：各 AI 工具原生会读取的路径（如 `CLAUDE.md`、`.cursor/rules/agentflow.mdc`）上的极短指针，内容仅指向 `.agentflow/AGENTS.md`。
+- **编辑器 / 平台**：内置六种 AI 编码环境（codex、claude、cursor、kiro、qoder、antigravity）；启用列表保存在用户级 `~/.agentflow/editors.yaml`。
+- **Doctor / Check**：校验规范骨架与已启用平台入口是否齐全；不评估文档内容质量，只检查文件存在性。
 
 ## 主要流程
 
-<!-- 业务上「一件事从头到尾怎么走」。用步骤或流程描述，
-  不贴代码。 -->
+### 1. 项目首次接入 Flow
+
+1. 开发者在目标仓库执行 `flow init`（或 REPL 中 `/init`）。
+2. Flow 写入 `.agentflow/` 规范骨架 + 已启用平台的薄入口。
+3. 开发者用任意 AI 编码工具打开项目；工具读到薄入口 → `.agentflow/AGENTS.md`。
+4. 首个 AI 助手通读规范、分析代码库，填写 `project.md` 等未完成的章节（本流程即如此产生）。
+
+### 2. 日常 AI 协作
+
+1. AI 开工前读 `AGENTS.md` 及索引文档，重述目标与范围。
+2. AI 按请求改代码，范围最小化。
+3. 改完后跑测试/lint，更新受影响的规范文档。
+4. 交接时报告：改动文件、验证命令、结果、风险、下一步。
+
+### 3. 编辑器配置变更
+
+1. `flow editors list` 查看启用状态。
+2. `flow editors add/remove` 或 `add-custom/remove-custom` 调整配置。
+3. `flow editors apply`（add/remove 会自动 apply）在项目内创建或安全移除薄入口。
+4. `flow check` 确认所需文件仍在。
+
+### 4. 健康检查
+
+1. `flow check` 列出缺失的骨架或入口文件。
+2. 附带本地 AI CLI 是否在 PATH 的诊断（仅供参考，不影响 exit code 以外的逻辑）。
 
 ## 术语表
 
-<!-- 项目里出现的、容易误解的业务术语。一词一行解释。
-  只收业务术语，不收通用技术词。 -->
+| 术语 | 含义 |
+|------|------|
+| Flow | 对外 CLI 品牌名，命令为 `flow` |
+| AgentFlow | Python 包名与历史称呼，与 Flow 指同一工具 |
+| Init | 生成规范骨架与薄入口，不询问业务问题 |
+| Force | `--force` 覆盖已存在的 Flow 生成文件 |
+| 骨架 | 带章节标题与 HTML 注释提示、正文待填的 `.md` 模板实例 |
+| 薄入口 | 各平台目录下的单行规范指针，非完整规范正文 |
+| 内置编辑器 | `templates.DEFAULT_PLATFORMS` 定义的六种平台 |
+| 自定义编辑器 | 用户通过 `editors add-custom` 注册的额外平台与入口路径 |
+| Reconcile | `apply_editors` 使项目内入口文件与 `editors.yaml` 启用列表一致 |
+| 维护契约 | AI 必须遵守的文档自更新纪律（见 `AGENTS.md`） |
+| Skill 路由 | `.agentflow/skills/README.md` 中的任务关键词 → 专项 skill 映射表 |
