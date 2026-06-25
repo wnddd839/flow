@@ -5,8 +5,8 @@
 <h3>轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基</h3>
 
 <p>
-<a href="https://github.com/wnddd839/flow/releases"><img src="https://img.shields.io/badge/version-0.5.0-346538?style=flat-square" alt="version"></a>
-<a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11+-1f6c9f?style=flat-square" alt="python"></a>
+<a href="https://github.com/wnddd839/flow/releases"><img src="https://img.shields.io/badge/version-0.6.0-346538?style=flat-square" alt="version"></a>
+<a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-18+-1f6c9f?style=flat-square" alt="node"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-787774?style=flat-square" alt="license"></a>
 <a href="https://wnddd839.github.io/flow/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-111111?style=flat-square" alt="docs"></a>
 </p>
@@ -25,18 +25,24 @@
 `flow init` 生成 `.agentflow/` 规范文档骨架；按需为所用 AI 工具生成薄入口指针。  
 文档内容由首个接手的 AI 分析代码后填写；Flow **不**绑定特定编辑器，**不**强制模型行为。
 
+> **v0.6（`feat/typescript` 分支）**：CLI 已用 TypeScript 重写，推荐通过 **npm** 安装。`main` 分支仍保留 Python 版直至合并。
+
 ## 一分钟了解
 
 | | |
 |---|---|
 | **是什么** | 规范层的「地基」工具 — 骨架、薄入口、存在性检查 |
 | **不是什么** | Agent 编排器、hook 插件、文档代写器 |
-| **怎么用** | `pip install` → `flow init` → AI 读 `AGENTS.md` 填骨架 |
+| **怎么用** | `npx @wnddd839/flow init` → AI 读 `AGENTS.md` 填骨架 |
 
 ## 快速开始
 
 ```bash
-pip install git+https://github.com/wnddd839/flow.git
+# 推荐：无需全局安装
+npx @wnddd839/flow init cursor
+
+# 或全局安装
+npm install -g @wnddd839/flow
 
 flow init                      # TTY 下交互勾选编辑器
 flow init --skeleton-only      # 仅 .agentflow/，不要薄入口
@@ -44,7 +50,14 @@ flow init cursor               # 骨架 + Cursor 薄入口
 flow check
 ```
 
-交互工作台：直接运行 `flow`，支持 `/init` `/check` `/tools` `/help`。
+从 GitHub 开发分支试用（发布 npm 前）：
+
+```bash
+git clone https://github.com/wnddd839/flow.git
+cd flow && git checkout feat/typescript
+npm install && npm run build
+node dist/cli.js init --skeleton-only
+```
 
 ## 生成物
 
@@ -85,8 +98,17 @@ flow check
 
 ## 开发
 
+**TypeScript（当前分支）：**
+
+```bash
+npm install
+npm run check          # typecheck + build + test
+node dist/cli.js --version
+```
+
+**Python（`main` 分支遗留，合并前双轨）：**
+
 ```bash
 python -m pip install -e ".[dev]"
-python -m compileall -f agentflow tests
 python -m pytest -q
 ```

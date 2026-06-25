@@ -13,12 +13,31 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wnddd839/flow.git"
+  },
+  "homepage": "https://wnddd839.github.io/flow/",
+  "bugs": {
+    "url": "https://github.com/wnddd839/flow/issues"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "cli",
+    "cursor",
+    "claude",
+    "spec",
+    "documentation"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "pretest": "npm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "check": "npm run typecheck && npm test",
+    "prepublishOnly": "npm run check"
   },
   "dependencies": {
     "@clack/prompts": "^0.10.0",

@@ -64,6 +64,14 @@ describe("initProject", () => {
   it("pickEditors returns empty when not TTY", async () => {
     await expect(pickEditors({ isTty: false })).resolves.toEqual([]);
   });
+
+  it("init is idempotent without force", () => {
+    const { root, home } = tempProject();
+    const first = initProject(root, { home });
+    const second = initProject(root, { home });
+    expect(first.created.length).toBeGreaterThan(0);
+    expect(second.created.length).toBe(0);
+  });
 });
 
 describe("doctorProject", () => {

@@ -74,7 +74,9 @@ export function loadEditorConfig(home?: string): EditorConfig {
           .slice(colon + 1)
           .trim()
           .replace(/^["']|["']$/g, "");
-        custom[currentCustom][key] = value;
+        if (key === "display" || key === "path") {
+          custom[currentCustom][key] = value;
+        }
       }
     }
   }
