@@ -11,6 +11,10 @@ build/
 dist/
 *.egg-info/
 
+# Node / TypeScript
+node_modules/
+*.tsbuildinfo
+
 # Virtual environments
 .venv/
 venv/
