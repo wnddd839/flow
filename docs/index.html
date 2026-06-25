@@ -6,380 +6,910 @@
   <title>Flow — AI 编码规范地基</title>
   <meta name="description" content="轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基。">
   <link rel="canonical" href="https://wnddd839.github.io/flow/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f8f7f4;
+      --bg: #f7f6f3;
       --surface: #ffffff;
-      --text: #1a1a18;
-      --muted: #5c5c56;
-      --border: #e4e2dc;
-      --accent: #2d5a4a;
-      --accent-soft: #e8f0ec;
-      --code-bg: #f0efe9;
-      --shadow: 0 1px 2px rgba(26, 26, 24, 0.06), 0 8px 24px rgba(26, 26, 24, 0.04);
+      --text: #111111;
+      --muted: #787774;
+      --border: #eaeaea;
+      --accent: #346538;
+      --accent-bg: #edf3ec;
+      --blue-bg: #e1f3fe;
+      --blue-text: #1f6c9f;
+      --red-bg: #fdebec;
+      --red-text: #9f2f2d;
+      --yellow-bg: #fbf3db;
+      --mono: "IBM Plex Mono", "Cascadia Code", Consolas, monospace;
+      --sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --serif: "Noto Serif SC", Georgia, serif;
       --radius: 10px;
-      --font: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-      --mono: "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #141413;
-        --surface: #1c1c1a;
-        --text: #eceae4;
-        --muted: #9b9b92;
-        --border: #2e2e2b;
-        --accent: #7eb89a;
-        --accent-soft: #1e2e28;
-        --code-bg: #252523;
-        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2);
-      }
+      --nav-h: 64px;
     }
 
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
-      font-family: var(--font);
-      font-size: 1.05rem;
+      font-family: var(--sans);
+      font-size: 1rem;
       line-height: 1.65;
       color: var(--text);
       background: var(--bg);
     }
 
-    a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
-    a:hover { text-decoration: none; }
+    a { color: inherit; }
 
-    .wrap {
-      max-width: 52rem;
-      margin: 0 auto;
-      padding: 2.5rem 1.25rem 4rem;
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
     }
 
-    header {
-      margin-bottom: 2.5rem;
-      padding-bottom: 2rem;
+    .ambient::before,
+    .ambient::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      animation: drift 24s ease-in-out infinite alternate;
+    }
+
+    .ambient::before {
+      width: 42vw;
+      height: 42vw;
+      top: -10%;
+      right: -8%;
+      background: #edf3ec;
+    }
+
+    .ambient::after {
+      width: 36vw;
+      height: 36vw;
+      bottom: 10%;
+      left: -12%;
+      background: #e1f3fe;
+      animation-delay: -8s;
+    }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(24px, -18px) scale(1.05); }
+    }
+
+    .page { position: relative; z-index: 1; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(1rem, 4vw, 2.5rem);
+      background: rgba(247, 246, 243, 0.82);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
 
-    .eyebrow {
-      font-size: 0.85rem;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: var(--text);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.92rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.62rem 1.15rem;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: transform 0.15s, background 0.2s, border-color 0.2s;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-dark {
+      background: var(--text);
+      color: #fff;
+    }
+
+    .btn-dark:hover { background: #333; }
+
+    .btn-ghost {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover { border-color: #ccc; }
+
+    .container {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: clamp(3rem, 8vw, 5.5rem) 0 clamp(3rem, 6vw, 4.5rem);
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    @media (min-width: 900px) {
+      .hero-grid { grid-template-columns: 1.05fr 0.95fr; }
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.28rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .badge-green { background: var(--accent-bg); color: var(--accent); }
+    .badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+    .badge-neutral { background: #f0efec; color: var(--muted); border-color: var(--border); }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.6rem, 6vw, 4.2rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin: 0 0 1.1rem;
+      font-weight: 700;
+    }
+
+    .hero-lead {
+      font-size: clamp(1.05rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 34rem;
+      margin: 0 0 1.75rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .install-box {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      max-width: 100%;
+      padding: 0.55rem 0.55rem 0.55rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .install-box code {
+      flex: 1;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .copy-btn:hover { color: var(--text); }
+
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: #fbfbf9;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #eaeaea; }
+
+    .terminal-title {
+      margin-left: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .terminal-body {
+      padding: 1.1rem 1.15rem 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      min-height: 260px;
+    }
+
+    .line { display: block; }
+    .prompt { color: var(--red-text); }
+    .ok { color: var(--accent); }
+    .dim { color: var(--muted); }
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1.1em;
+      background: var(--text);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .section {
+      padding: clamp(3rem, 7vw, 5rem) 0;
+    }
+
+    .section-head {
+      max-width: 38rem;
+      margin-bottom: 2rem;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--muted);
       margin: 0 0 0.5rem;
     }
 
-    h1 {
-      font-size: clamp(2.2rem, 5vw, 3rem);
-      line-height: 1.15;
-      margin: 0 0 1rem;
-      font-weight: 650;
+    .section h2 {
+      font-family: var(--serif);
+      font-size: clamp(1.8rem, 3.5vw, 2.4rem);
       letter-spacing: -0.02em;
+      margin: 0 0 0.75rem;
+      line-height: 1.15;
     }
 
-    .lead {
-      font-size: 1.15rem;
-      color: var(--muted);
-      margin: 0 0 1.5rem;
-      max-width: 42rem;
+    .section p { color: var(--muted); margin: 0; }
+
+    .bento {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
     }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      align-items: center;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 0.55rem 1rem;
-      border-radius: 999px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-decoration: none;
-      border: 1px solid transparent;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .btn-primary { color: #141413; }
-    }
-
-    .btn-secondary {
-      background: var(--surface);
-      color: var(--text);
-      border-color: var(--border);
-      box-shadow: var(--shadow);
-    }
-
-    section {
-      margin-bottom: 2.5rem;
-    }
-
-    h2 {
-      font-size: 1.35rem;
-      margin: 0 0 1rem;
-      letter-spacing: -0.01em;
-    }
-
-    h3 {
-      font-size: 1.05rem;
-      margin: 1.25rem 0 0.5rem;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    p { margin: 0 0 1rem; }
-
-    ul, ol {
-      margin: 0 0 1rem;
-      padding-left: 1.35rem;
-    }
-
-    li + li { margin-top: 0.35rem; }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.25rem 1.35rem;
-      box-shadow: var(--shadow);
+      padding: 1.35rem 1.4rem;
+      transition: box-shadow 0.2s, transform 0.2s;
     }
 
-    .cols {
+    .card:hover {
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.05rem;
+    }
+
+    .card p, .card li {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .card li + li { margin-top: 0.35rem; }
+
+  .span-4 { grid-column: span 12; }
+  .span-6 { grid-column: span 12; }
+  .span-8 { grid-column: span 12; }
+
+    @media (min-width: 720px) {
+      .span-4 { grid-column: span 4; }
+      .span-6 { grid-column: span 6; }
+      .span-8 { grid-column: span 8; }
+    }
+
+    .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .icon-green { background: var(--accent-bg); color: var(--accent); }
+    .icon-blue { background: var(--blue-bg); color: var(--blue-text); }
+    .icon-red { background: var(--red-bg); color: var(--red-text); }
+    .icon-yellow { background: var(--yellow-bg); color: #956400; }
+
+    .flow-steps {
       display: grid;
       gap: 1rem;
     }
 
-    @media (min-width: 640px) {
-      .cols { grid-template-columns: 1fr 1fr; }
+    @media (min-width: 768px) {
+      .flow-steps { grid-template-columns: repeat(3, 1fr); }
     }
 
-    .tag-yes::before { content: "只做 · "; color: var(--accent); font-weight: 600; }
-    .tag-no::before { content: "不做 · "; color: var(--muted); font-weight: 600; }
-
-    pre {
-      margin: 0 0 1rem;
-      padding: 1rem 1.1rem;
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow-x: auto;
-      font-family: var(--mono);
-      font-size: 0.88rem;
-      line-height: 1.55;
-    }
-
-    code {
-      font-family: var(--mono);
-      font-size: 0.9em;
-      background: var(--code-bg);
-      padding: 0.12em 0.35em;
-      border-radius: 4px;
-    }
-
-    pre code {
-      background: none;
-      padding: 0;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
+    .step {
+      position: relative;
+      padding: 1.5rem;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
     }
 
-    th, td {
-      text-align: left;
-      padding: 0.7rem 1rem;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
+    .step-num {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
     }
 
-    th {
-      background: var(--accent-soft);
-      font-weight: 600;
+    .step h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.05rem;
     }
 
-    tr:last-child td { border-bottom: none; }
-
-    .principles {
-      counter-reset: principle;
-      list-style: none;
-      padding: 0;
+    .step p {
       margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
     }
 
-    .principles li {
-      counter-increment: principle;
-      padding: 0.85rem 0;
-      border-bottom: 1px solid var(--border);
+    .tree {
+      font-family: var(--mono);
+      font-size: 0.84rem;
+      line-height: 1.75;
+      padding: 1.25rem 1.35rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
     }
 
-    .principles li:last-child { border-bottom: none; }
+    .tree .dir { color: var(--blue-text); }
+    .tree .file { color: var(--text); }
+    .tree .note { color: var(--muted); }
 
-    .principles li::before {
-      content: counter(principle);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.6rem;
-      height: 1.6rem;
-      margin-right: 0.65rem;
-      border-radius: 50%;
-      background: var(--accent-soft);
+    .commands {
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .cmd-row {
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.9rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      align-items: start;
+    }
+
+    @media (min-width: 640px) {
+      .cmd-row { grid-template-columns: 14rem 1fr; gap: 1rem; }
+    }
+
+    .cmd-row code {
+      font-family: var(--mono);
+      font-size: 0.84rem;
       color: var(--accent);
-      font-size: 0.8rem;
-      font-weight: 700;
-      vertical-align: middle;
+      background: var(--accent-bg);
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .cmd-row span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .compare {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .compare { grid-template-columns: 1fr 1fr; }
+    }
+
+    .compare-yes { border-top: 3px solid var(--accent); }
+    .compare-no { border-top: 3px solid #d8d8d5; }
+
+    .principles-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .principles-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 960px) {
+      .principles-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .principle {
+      padding: 1.1rem 1.15rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .principle strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
+
+    .principle span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .cta {
+      margin: 1rem 0 0;
+      padding: clamp(2rem, 5vw, 3rem);
+      text-align: center;
+      background: var(--text);
+      color: #f7f6f3;
+      border-radius: 14px;
+    }
+
+    .cta h2 {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      margin: 0 0 0.75rem;
+      color: #fff;
+    }
+
+    .cta p {
+      color: #b8b6b0;
+      margin: 0 auto 1.5rem;
+      max-width: 32rem;
+    }
+
+    .cta .btn-dark {
+      background: #fff;
+      color: var(--text);
     }
 
     footer {
-      margin-top: 3rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
+      padding: 2.5rem 0 3rem;
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    footer .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    footer a:hover { color: var(--text); }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 720px) {
+      .nav-links a:not(.btn) { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <p class="eyebrow">Offline CLI · v0.5.0</p>
-      <h1>Flow</h1>
-      <p class="lead">
-        轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基。
-        <code>flow init</code> 生成 <code>.agentflow/</code> 规范文档骨架；按需为所用 AI 工具生成薄入口指针。
-        文档内容由首个接手的 AI 分析代码后填写；Flow 不绑定特定编辑器，也不强制模型行为。
-      </p>
-      <div class="actions">
-        <a class="btn btn-primary" href="https://github.com/wnddd839/flow">GitHub 仓库</a>
-        <a class="btn btn-secondary" href="#quickstart">快速开始</a>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="page">
+    <nav class="nav">
+      <a class="brand" href="#">
+        <span class="brand-mark">fl</span>
+        Flow
+      </a>
+      <div class="nav-links">
+        <a href="#features">特性</a>
+        <a href="#how">原理</a>
+        <a href="#commands">命令</a>
+        <a class="btn btn-dark" href="https://github.com/wnddd839/flow">GitHub</a>
+      </div>
+    </nav>
+
+    <header class="hero container">
+      <div class="hero-grid">
+        <div class="reveal">
+          <div class="badges">
+            <span class="badge badge-green">v0.5.0</span>
+            <span class="badge badge-blue">离线 CLI</span>
+            <span class="badge badge-neutral">Python 3.11+</span>
+            <span class="badge badge-neutral">MIT</span>
+          </div>
+          <h1>给 AI 编码<br>铺一层规范地基</h1>
+          <p class="hero-lead">
+            一行命令生成 <code style="font-family:var(--mono);font-size:0.92em;background:#f0efec;padding:0.1em 0.35em;border-radius:4px">.agentflow/</code> 文档骨架，
+            按需写入 Cursor / Claude 等薄入口。不编排工作流，不绑定编辑器，不强制模型。
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-dark" href="#quickstart">快速开始</a>
+            <a class="btn btn-ghost" href="https://github.com/wnddd839/flow">查看源码</a>
+          </div>
+          <div class="install-box">
+            <code id="install-cmd">pip install git+https://github.com/wnddd839/flow.git</code>
+            <button class="copy-btn" type="button" data-copy="install-cmd">复制</button>
+          </div>
+        </div>
+
+        <div class="terminal reveal" style="transition-delay:0.1s">
+          <div class="terminal-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="terminal-title">flow — zsh</span>
+          </div>
+          <div class="terminal-body" id="terminal-demo" aria-live="polite"></div>
+        </div>
       </div>
     </header>
 
-    <section>
-      <h2>定位</h2>
-      <p>Flow 是辅助开发者的基础设施，不是 agent 编排器。</p>
-      <div class="cols">
-        <div class="card">
-          <h3 class="tag-yes">只做</h3>
-          <ul>
-            <li>生成结构清晰、边界分明的规范文档骨架</li>
-            <li>按所选平台，在工具原生路径写入指向 <code>.agentflow/AGENTS.md</code> 的薄指针</li>
-            <li><code>check</code> 校验骨架与已启用入口文件是否存在</li>
-            <li><code>editors</code> 管理启用哪些平台的薄入口</li>
-          </ul>
+    <section class="section" id="features">
+      <div class="container reveal">
+        <div class="section-head">
+          <p class="section-label">Why Flow</p>
+          <h2>基础设施，不是编排器</h2>
+          <p>Flow 只做规范层的「地基」——结构、入口、存在性检查。文档正文与维护靠 AGENTS.md 契约，由 AI 与开发者完成。</p>
         </div>
-        <div class="card">
-          <h3 class="tag-no">不做</h3>
-          <ul>
-            <li>工作流编排、handoff、状态追踪、skill 包管理</li>
-            <li>绑定某一 agent 或编辑器的 hook / 插件</li>
-            <li>代替 AI 填写或校验文档内容</li>
-            <li>默认在根目录堆满六个平台的文件夹</li>
-          </ul>
+        <div class="bento">
+          <article class="card span-4">
+            <div class="icon icon-green">01</div>
+            <h3>边界分明的骨架</h3>
+            <p>project / conventions / business / pitfalls 各司其职，顶部「只写 / 不写」声明防止信息堆成一个大 README。</p>
+          </article>
+          <article class="card span-4">
+            <div class="icon icon-blue">02</div>
+            <h3>按需薄入口</h3>
+            <p>只为你用的平台生成 CLAUDE.md、.cursor/rules 等指针，默认不堆满六个工具目录。</p>
+          </article>
+          <article class="card span-4">
+            <div class="icon icon-yellow">03</div>
+            <h3>契约靠提示词</h3>
+            <p>AGENTS.md 写明首次接手、大改动同步、完成自检；Flow 不拦截、不 hook、不强制模型。</p>
+          </article>
+          <article class="card span-8">
+            <div class="icon icon-green">04</div>
+            <h3>始终生成的规范目录</h3>
+            <div class="tree" style="margin-top:0.75rem">
+              <span class="dir">.agentflow/</span><br>
+              <span class="file">├── AGENTS.md</span> <span class="note"># 总入口 + 维护契约</span><br>
+              <span class="file">├── project.md</span> <span class="note"># 项目是什么</span><br>
+              <span class="file">├── conventions.md</span> <span class="note"># 怎么写代码</span><br>
+              <span class="file">├── business.md</span> <span class="note"># 业务是什么</span><br>
+              <span class="file">├── pitfalls.md</span> <span class="note"># 踩过的坑</span><br>
+              <span class="file">└── skills/README.md</span> <span class="note"># skill 路由</span>
+            </div>
+          </article>
+          <article class="card span-4">
+            <div class="icon icon-red">05</div>
+            <h3>check 只验存在</h3>
+            <p><code style="font-family:var(--mono);font-size:0.85em">flow check</code> 确认骨架与已启用入口齐全，不评判文档是否填完。</p>
+          </article>
         </div>
       </div>
     </section>
 
-    <section>
-      <h2>生成物</h2>
-      <h3>始终生成（<code>.agentflow/</code>）</h3>
-      <pre><code>.agentflow/
-  AGENTS.md          总入口（文档索引 + 维护契约）
-  project.md         项目是什么
-  conventions.md     怎么写代码
-  business.md        业务是什么
-  pitfalls.md        踩过的坑
-  skills/README.md   专项 skill 路由表</code></pre>
-      <p>
-        <strong>按需生成</strong>（所选编辑器的薄入口，例如 Cursor → <code>.cursor/rules/agentflow.mdc</code>）。
-        不选任何编辑器时，仓库里不会多出 <code>CLAUDE.md</code>、<code>AGENTS.md</code>（Codex）等文件。
-      </p>
+    <section class="section" id="how" style="padding-top:0">
+      <div class="container reveal">
+        <div class="section-head">
+          <p class="section-label">How it works</p>
+          <h2>三步接入任意仓库</h2>
+        </div>
+        <div class="flow-steps">
+          <div class="step">
+            <div class="step-num">STEP 01</div>
+            <h3>init 铺地基</h3>
+            <p>交互勾选或命令行指定编辑器，生成 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/</code> 与薄入口指针。</p>
+          </div>
+          <div class="step">
+            <div class="step-num">STEP 02</div>
+            <h3>AI 读规范填骨架</h3>
+            <p>各工具读到薄入口 → AGENTS.md → 分析代码库，填写 project 等章节。</p>
+          </div>
+          <div class="step">
+            <div class="step-num">STEP 03</div>
+            <h3>日常协作 + check</h3>
+            <p>改动后按契约更新文档；<code style="font-family:var(--mono);font-size:0.85em">flow check</code> 随时确认文件齐全。</p>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section id="quickstart">
-      <h2>快速开始</h2>
-      <pre><code>pip install git+https://github.com/wnddd839/flow.git
-
-# 交互勾选编辑器（TTY 下弹出多选列表）
-flow init
-
-# 只铺骨架，不要任何薄入口
-flow init --skeleton-only
-
-# 直接指定平台（可写多个）
-flow init cursor
-flow init cursor claude
-flow init --editors qoder,cursor
-
-flow check</code></pre>
-      <p>交互工作台：</p>
-      <pre><code>flow
-# /init  /check  /tools  /instructions  /help</code></pre>
+    <section class="section">
+      <div class="container reveal">
+        <div class="section-head">
+          <p class="section-label">Scope</p>
+          <h2>做什么，不做什么</h2>
+        </div>
+        <div class="compare">
+          <div class="card compare-yes">
+            <h3 style="color:var(--accent);margin-top:0">只做</h3>
+            <ul>
+              <li>生成结构清晰的规范文档骨架</li>
+              <li>按平台写入指向 AGENTS.md 的薄指针</li>
+              <li>check 校验文件存在性</li>
+              <li>editors 管理启用哪些入口</li>
+            </ul>
+          </div>
+          <div class="card compare-no">
+            <h3 style="color:var(--muted);margin-top:0">不做</h3>
+            <ul>
+              <li>工作流编排、handoff、状态追踪</li>
+              <li>绑定某一编辑器的 hook / 插件</li>
+              <li>代替 AI 填写或校验文档内容</li>
+              <li>默认堆满六个平台文件夹</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section>
-      <h2>命令</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>命令</th>
-            <th>说明</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td><code>flow init</code></td><td>生成 <code>.agentflow/</code>；TTY 下交互选择编辑器</td></tr>
-          <tr><td><code>flow init cursor</code></td><td>生成骨架 + 指定平台薄入口</td></tr>
-          <tr><td><code>flow init --skeleton-only</code></td><td>仅 <code>.agentflow/</code>，不生成薄入口</td></tr>
-          <tr><td><code>flow init --editors a,b</code></td><td>逗号分隔，同 positional</td></tr>
-          <tr><td><code>flow check</code></td><td>检查骨架与已启用入口是否齐全（<code>doctor</code> 为别名）</td></tr>
-          <tr><td><code>flow editors list</code></td><td>查看/管理启用的编辑器</td></tr>
-          <tr><td><code>flow tools</code></td><td>检测本机 AI 编码 CLI</td></tr>
-          <tr><td><code>flow instructions</code></td><td>打印 agent 工作说明摘要</td></tr>
-        </tbody>
-      </table>
+    <section class="section" id="quickstart">
+      <div class="container reveal">
+        <div class="section-head">
+          <p class="section-label">Quickstart</p>
+          <h2>快速开始</h2>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>pip install git+https://github.com/wnddd839/flow.git
+
+flow init                      # TTY 交互勾选编辑器
+flow init --skeleton-only      # 仅 .agentflow/
+flow init cursor               # 骨架 + Cursor 入口
+flow init cursor claude        # 多平台
+flow check
+
+flow                           # REPL: /init /check /tools /help</code></pre>
+        </div>
+      </div>
     </section>
 
-    <section>
-      <h2>设计原则</h2>
-      <ol class="principles card">
-        <li><strong>轻巧</strong> — 离线 CLI，最小依赖，不接管开发流程。</li>
-        <li><strong>地基优先</strong> — 只产文档结构与入口指针，内容交给 AI 与开发者。</li>
-        <li><strong>按需铺入口</strong> — 不默认生成六个平台目录，减少仓库杂乱。</li>
-        <li><strong>边界分明</strong> — 每份文档有「只写 / 不写」声明，防止堆成一个大 README。</li>
-        <li><strong>契约靠提示词</strong> — <code>AGENTS.md</code> 写明 AI 应如何维护文档；Flow 不拦截、不强制。</li>
-        <li><strong>平台中立</strong> — 支持多编辑器薄入口，但不绑定任一平台做深度集成。</li>
-      </ol>
+    <section class="section" id="commands" style="padding-top:0">
+      <div class="container reveal">
+        <div class="section-head">
+          <p class="section-label">CLI</p>
+          <h2>命令参考</h2>
+        </div>
+        <div class="commands">
+          <div class="cmd-row"><code>flow init</code><span>生成 .agentflow/；TTY 下交互选择编辑器</span></div>
+          <div class="cmd-row"><code>flow init cursor</code><span>生成骨架 + 指定平台薄入口</span></div>
+          <div class="cmd-row"><code>flow init --skeleton-only</code><span>仅骨架，不生成薄入口</span></div>
+          <div class="cmd-row"><code>flow check</code><span>检查骨架与已启用入口（doctor 为别名）</span></div>
+          <div class="cmd-row"><code>flow editors list</code><span>查看 / 管理启用的编辑器</span></div>
+          <div class="cmd-row"><code>flow tools</code><span>检测本机 AI 编码 CLI 是否在 PATH</span></div>
+          <div class="cmd-row"><code>flow instructions</code><span>打印 agent 工作说明摘要</span></div>
+        </div>
+      </div>
     </section>
 
-    <section>
-      <h2>开发</h2>
-      <pre><code>python -m pip install -e ".[dev]"
-python -m compileall -f agentflow tests
-python -m pytest -q</code></pre>
+    <section class="section" style="padding-top:0">
+      <div class="container reveal">
+        <div class="section-head">
+          <p class="section-label">Principles</p>
+          <h2>设计原则</h2>
+        </div>
+        <div class="principles-grid">
+          <div class="principle"><strong>轻巧</strong><span>离线 CLI，最小依赖，不接管开发流程</span></div>
+          <div class="principle"><strong>地基优先</strong><span>只产结构与指针，内容交给 AI 与开发者</span></div>
+          <div class="principle"><strong>按需铺入口</strong><span>不默认生成六个平台目录</span></div>
+          <div class="principle"><strong>边界分明</strong><span>每份文档有只写 / 不写声明</span></div>
+          <div class="principle"><strong>契约靠提示词</strong><span>Flow 不拦截、不强制</span></div>
+          <div class="principle"><strong>平台中立</strong><span>支持多入口，不做深度绑定</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="container reveal">
+        <div class="cta">
+          <h2>在你的仓库里试一下</h2>
+          <p>一行安装，一行 init。让下一个接手的 AI 先读规范，再写代码。</p>
+          <a class="btn btn-dark" href="https://github.com/wnddd839/flow">Star on GitHub</a>
+        </div>
+      </div>
     </section>
 
     <footer>
-      <p>
-        <a href="https://github.com/wnddd839/flow">github.com/wnddd839/flow</a>
-        · MIT License
-        · 文档由 README 同步生成
-      </p>
+      <div class="container">
+        <span>Flow · MIT License · v0.5.0</span>
+        <span>
+          <a href="https://github.com/wnddd839/flow">GitHub</a>
+          ·
+          <a href="https://github.com/wnddd839/flow/blob/main/README.md">README</a>
+        </span>
+      </div>
     </footer>
   </div>
+
+  <script>
+    const lines = [
+      { t: "prompt", s: "$ flow init cursor" },
+      { t: "dim", s: "Initialized specification skeleton" },
+      { t: "ok", s: "Editors: cursor" },
+      { t: "dim", s: "Created: 7  Skipped: 0" },
+      { t: "prompt", s: "$ flow check" },
+      { t: "ok", s: "AgentFlow check: OK" },
+      { t: "dim", s: ".agentflow/AGENTS.md ready" },
+    ];
+
+    const term = document.getElementById("terminal-demo");
+    let lineIndex = 0;
+    let charIndex = 0;
+    let currentSpan = null;
+
+    function typeNext() {
+      if (lineIndex >= lines.length) {
+        setTimeout(() => {
+          term.innerHTML = "";
+          lineIndex = 0;
+          charIndex = 0;
+          typeNext();
+        }, 2800);
+        return;
+      }
+
+      const item = lines[lineIndex];
+      if (charIndex === 0) {
+        currentSpan = document.createElement("span");
+        currentSpan.className = "line " + item.t;
+        term.appendChild(currentSpan);
+      }
+
+      if (charIndex < item.s.length) {
+        currentSpan.textContent += item.s[charIndex++];
+        setTimeout(typeNext, item.t === "prompt" ? 28 : 12);
+        return;
+      }
+
+      lineIndex++;
+      charIndex = 0;
+      if (lineIndex < lines.length) {
+        const cursor = document.createElement("span");
+        cursor.className = "cursor";
+        term.appendChild(cursor);
+        setTimeout(() => {
+          cursor.remove();
+          typeNext();
+        }, 320);
+      } else {
+        typeNext();
+      }
+    }
+
+    typeNext();
+
+    document.querySelectorAll("[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-copy");
+        const text = document.getElementById(id).textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = "已复制";
+          setTimeout(() => { btn.textContent = "复制"; }, 1600);
+        } catch {
+          btn.textContent = "失败";
+        }
+      });
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add("visible");
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  </script>
 </body>
 </html>
