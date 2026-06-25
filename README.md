@@ -1,17 +1,22 @@
 ﻿<div align="center">
 
-<img src="docs/assets/banner.svg" alt="Flow — AI 编码规范地基" width="100%">
+<img src="docs/assets/banner.png" alt="Flow — spec foundation for AI coding" width="820">
 
-<br><br>
+<h3>轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基</h3>
 
-**轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基**
+<p>
+<a href="https://github.com/wnddd839/flow/releases"><img src="https://img.shields.io/badge/version-0.5.0-346538?style=flat-square" alt="version"></a>
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11+-1f6c9f?style=flat-square" alt="python"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-787774?style=flat-square" alt="license"></a>
+<a href="https://wnddd839.github.io/flow/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-111111?style=flat-square" alt="docs"></a>
+</p>
 
-[![version](https://img.shields.io/badge/version-0.5.0-346538?style=flat-square)](https://github.com/wnddd839/flow/releases)
-[![python](https://img.shields.io/badge/python-3.11+-1f6c9f?style=flat-square)](https://www.python.org/)
-[![license](https://img.shields.io/badge/license-MIT-787774?style=flat-square)](LICENSE)
-[![docs](https://img.shields.io/badge/docs-GitHub%20Pages-111111?style=flat-square)](https://wnddd839.github.io/flow/)
-
-[文档站点](https://wnddd839.github.io/flow/) · [快速开始](#快速开始) · [设计原则](#设计原则)
+<p>
+<a href="https://wnddd839.github.io/flow/"><b>文档站点</b></a> ·
+<a href="#快速开始">快速开始</a> ·
+<a href="#命令">命令</a> ·
+<a href="#设计原则">设计原则</a>
+</p>
 
 </div>
 
