@@ -620,6 +620,7 @@
         <a href="#features">特性</a>
         <a href="#how">原理</a>
         <a href="#commands">命令</a>
+        <a href="https://www.npmjs.com/package/@wnddd8339/flow">npm</a>
         <a class="btn btn-dark" href="https://github.com/wnddd839/flow">GitHub</a>
       </div>
     </nav>
@@ -630,7 +631,7 @@
           <div class="badges">
             <span class="badge badge-green">v0.6.0</span>
             <span class="badge badge-blue">离线 CLI</span>
-            <span class="badge badge-neutral">Python 3.11+</span>
+            <span class="badge badge-neutral">Node 18+</span>
             <span class="badge badge-neutral">MIT</span>
           </div>
           <h1>给 AI 编码<br>铺一层规范地基</h1>
@@ -643,7 +644,7 @@
             <a class="btn btn-ghost" href="https://github.com/wnddd839/flow">查看源码</a>
           </div>
           <div class="install-box">
-            <code id="install-cmd">pip install git+https://github.com/wnddd839/flow.git</code>
+            <code id="install-cmd">npx @wnddd8339/flow init cursor</code>
             <button class="copy-btn" type="button" data-copy="install-cmd">复制</button>
           </div>
         </div>
@@ -696,8 +697,8 @@
           </article>
           <article class="card span-4">
             <div class="icon icon-red">05</div>
-            <h3>check 只验存在</h3>
-            <p><code style="font-family:var(--mono);font-size:0.85em">flow check</code> 确认骨架与已启用入口齐全，不评判文档是否填完。</p>
+            <h3>check 验存在与漂移</h3>
+            <p><code style="font-family:var(--mono);font-size:0.85em">flow check</code> 确认骨架与已启用入口齐全，并检测薄入口是否仍指向 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/AGENTS.md</code>。</p>
           </article>
         </div>
       </div>
@@ -765,15 +766,13 @@
           <h2>快速开始</h2>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>pip install git+https://github.com/wnddd839/flow.git
+          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>npx @wnddd8339/flow init cursor
 
 flow init                      # TTY 交互勾选编辑器
 flow init --skeleton-only      # 仅 .agentflow/
 flow init cursor               # 骨架 + Cursor 入口
 flow init cursor claude        # 多平台
-flow check
-
-flow                           # REPL: /init /check /tools /help</code></pre>
+flow check                     # 存在性 + 薄入口漂移检测</code></pre>
         </div>
       </div>
     </section>
@@ -788,7 +787,7 @@ flow                           # REPL: /init /check /tools /help</code></pre>
           <div class="cmd-row"><code>flow init</code><span>生成 .agentflow/；TTY 下交互选择编辑器</span></div>
           <div class="cmd-row"><code>flow init cursor</code><span>生成骨架 + 指定平台薄入口</span></div>
           <div class="cmd-row"><code>flow init --skeleton-only</code><span>仅骨架，不生成薄入口</span></div>
-          <div class="cmd-row"><code>flow check</code><span>检查骨架与已启用入口（doctor 为别名）</span></div>
+          <div class="cmd-row"><code>flow check</code><span>检查骨架与已启用入口；检测薄入口是否漂移（doctor 为别名）</span></div>
           <div class="cmd-row"><code>flow editors list</code><span>查看 / 管理启用的编辑器</span></div>
           <div class="cmd-row"><code>flow tools</code><span>检测本机 AI 编码 CLI 是否在 PATH</span></div>
           <div class="cmd-row"><code>flow instructions</code><span>打印 agent 工作说明摘要</span></div>
@@ -818,16 +817,19 @@ flow                           # REPL: /init /check /tools /help</code></pre>
         <div class="cta">
           <h2>在你的仓库里试一下</h2>
           <p>一行安装，一行 init。让下一个接手的 AI 先读规范，再写代码。</p>
-          <a class="btn btn-dark" href="https://github.com/wnddd839/flow">Star on GitHub</a>
+          <a class="btn btn-dark" href="https://www.npmjs.com/package/@wnddd8339/flow">npm 安装</a>
+          <a class="btn btn-ghost" href="https://github.com/wnddd839/flow">Star on GitHub</a>
         </div>
       </div>
     </section>
 
     <footer>
       <div class="container">
-        <span>Flow · MIT License · v0.6.0</span>
+        <span>Flow · MIT License · v0.6.0 · <a href="https://www.npmjs.com/package/@wnddd8339/flow">@wnddd8339/flow</a></span>
         <span>
           <a href="https://github.com/wnddd839/flow">GitHub</a>
+          ·
+          <a href="https://www.npmjs.com/package/@wnddd8339/flow">npm</a>
           ·
           <a href="https://github.com/wnddd839/flow/blob/main/README.md">README</a>
         </span>

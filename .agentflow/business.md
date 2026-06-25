@@ -18,7 +18,7 @@
 - **维护契约**：写在 `AGENTS.md` 中的 AI 工作约定——首次接手填骨架、改动后更新文档、信息不重复、以代码为准。靠提示词传达，Flow 工具层不强制执行。
 - **薄入口（thin entrypoint）**：各 AI 工具原生会读取的路径（如 `CLAUDE.md`、`.cursor/rules/agentflow.mdc`）上的极短指针，内容仅指向 `.agentflow/AGENTS.md`。
 - **编辑器 / 平台**：内置六种 AI 编码环境（codex、claude、cursor、kiro、qoder、antigravity）；启用列表保存在用户级 `~/.agentflow/editors.yaml`。可缩减或自定义，但不意味 Flow 绑定某一平台。
-- **Check**：校验规范骨架与已启用平台入口是否齐全；只检查文件存在性，不评估文档内容。
+- **Check**：校验规范骨架与已启用平台入口是否齐全；并检测薄入口内容是否仍指向 `.agentflow/AGENTS.md`（漂移）。
 
 ## 主要流程
 
@@ -55,7 +55,7 @@
 | 术语 | 含义 |
 |------|------|
 | Flow | 对外 CLI 品牌名，命令为 `flow` |
-| AgentFlow | Python 包名，与 Flow 指同一工具 |
+| @wnddd8339/flow | npm 包名，与 Flow 指同一工具 |
 | 地基 | Flow 产出的结构层：骨架 + 薄入口 + check，不含文档正文 |
 | Init | 生成规范骨架与薄入口，不询问业务问题 |
 | Force | `--force` 覆盖已存在的 Flow 生成文件 |

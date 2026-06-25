@@ -1,17 +1,23 @@
 {
-  "name": "@wnddd839/flow",
+  "name": "@wnddd8339/flow",
   "version": "0.6.0",
   "description": "Project specification document initializer for AI coding tools",
   "type": "module",
   "license": "MIT",
+  "author": "wnddd839 (https://github.com/wnddd839)",
   "engines": {
     "node": ">=18"
   },
   "bin": {
-    "flow": "./dist/cli.js"
+    "flow": "dist/cli.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "repository": {
     "type": "git",
@@ -36,7 +42,9 @@
     "pretest": "npm run build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm test",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "npm run lint && npm run typecheck && npm test",
     "prepublishOnly": "npm run check"
   },
   "dependencies": {
@@ -44,6 +52,7 @@
     "commander": "^13.1.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.1",
     "@types/node": "^22.13.10",
     "tsup": "^8.4.0",
     "typescript": "^5.8.2",

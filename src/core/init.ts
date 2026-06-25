@@ -27,10 +27,7 @@ export function initProject(
   const created: string[] = [];
   const skipped: string[] = [];
 
-  const editorNames =
-    editors === null
-      ? []
-      : normalizeEditorNames(editors);
+  const editorNames = editors === null ? [] : normalizeEditorNames(editors);
 
   const config = loadEditorConfig(home);
   saveEditorConfig(editorNames, config.custom, home);

@@ -1,8 +1,8 @@
 import {
   existsSync,
   mkdirSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   rmSync,
   statSync,
   unlinkSync,
@@ -23,7 +23,10 @@ export interface ApplyEditorsResult {
   skipped: string[];
 }
 
-export function safeProjectPath(root: string, candidate: string): string | null {
+export function safeProjectPath(
+  root: string,
+  candidate: string,
+): string | null {
   const cleaned = String(candidate).trim();
   if (!cleaned) return null;
   if (cleaned.startsWith("/") || /^[A-Za-z]:[\\/]/.test(cleaned)) {
@@ -51,7 +54,10 @@ function isAgentflowEntrypoint(path: string): boolean {
     const content = readFileSync(path, "utf8");
     if (content.includes(AGENTFLOW_GENERATED_MARKER)) return true;
     if (content.includes("本项目规范见 `.agentflow/AGENTS.md`")) return true;
-    if (content.includes("# AgentFlow for") && content.includes("thin platform entrypoint")) {
+    if (
+      content.includes("# AgentFlow for") &&
+      content.includes("thin platform entrypoint")
+    ) {
       return true;
     }
     return false;

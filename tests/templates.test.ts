@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  AGENTFLOW_GENERATED_MARKER,
   AGENT_INSTRUCTIONS,
+  AGENTFLOW_GENERATED_MARKER,
   agentsMd,
-  conventionsSkeleton,
   businessSkeleton,
+  conventionsSkeleton,
   pitfallsSkeleton,
   projectSkeleton,
   rootAgentsPointer,

@@ -6,14 +6,14 @@
 
 | 任务关键词 | 先读 |
 |-----------|------|
-| 任务涉及 新增 CLI 子命令 / argparse / 命令行参数 时 | 先读 `agentflow/cli.py` 现有 `COMMANDS` 模式，保持与 `_cmd_*` 一致 |
-| 任务涉及 新增或修改内置编辑器 / 薄入口路径 时 | 先读 `agentflow/templates.py` 中 `PLATFORM_*` 与 `agentflow/editors.py` |
-| 任务涉及 修改 init 生成物或 doctor 检查项 时 | 先读 `agentflow/core.py` 的 `BASE_REQUIRED_FILES` 与 `tests/test_init.py` |
+| 任务涉及 新增 CLI 子命令 / Commander 选项 时 | 先读 `src/cli.ts` 现有命令注册模式 |
+| 任务涉及 新增或修改内置编辑器 / 薄入口路径 时 | 先读 `src/templates.ts` 中 `PLATFORM_*` 与 `src/editors/` |
+| 任务涉及 修改 init 生成物或 doctor 检查项 时 | 先读 `src/core/check.ts` 的 `BASE_REQUIRED_FILES` 与 `tests/init.test.ts` |
 | 任务涉及 填写或更新 `.agentflow/*.md` 规范文档 时 | 先读 `.agentflow/AGENTS.md` 文档维护契约与各文件顶部边界声明 |
 
 <!--
 维护规则：
-- 上表已按本仓库（agentflow-mvp 自身）的常见改动场景填写。
+- 上表已按本仓库（flow 自身）的常见改动场景填写。
 - 新增行时触发词写具体词，不写模糊描述。
 - 若引入 `.agentflow/skills/` 下新的专项 skill 文件，在此表增加对应路由。
 -->

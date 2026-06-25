@@ -25,7 +25,12 @@ program
   .description(
     "Initialize strict project specification docs for AI coding tools.",
   )
-  .version(VERSION, "-V, --version", "Show version");
+  .version(VERSION, "-V, --version", "Show version")
+  .action(() => {
+    program.outputHelp();
+    console.log();
+    console.log("先来一发：`flow init`（TTY 下可交互勾选编辑器）。");
+  });
 
 program
   .command("init")
@@ -65,7 +70,10 @@ program
       return;
     }
 
-    const result = initProject(cwd, { editors: editorList, force: options.force });
+    const result = initProject(cwd, {
+      editors: editorList,
+      force: options.force,
+    });
     console.log(`Initialized specification skeleton in ${cwd}`);
     if (editorList.length) {
       console.log(`Editors: ${editorList.join(", ")}`);
@@ -79,7 +87,19 @@ program
         `Removed disabled editor entrypoints: ${result.editorsRemoved.join(", ")}`,
       );
     }
+    printNextSteps();
   });
+
+function printNextSteps(): void {
+  console.log();
+  console.log("下一步:");
+  console.log(
+    "  1. 让接手的 AI 编码助手先读 `.agentflow/AGENTS.md`，按各文件边界声明填写骨架。",
+  );
+  console.log(
+    "  2. 填完后运行 `flow check` 校验骨架与薄入口是否齐全、是否漂移。",
+  );
+}
 
 function runCheck(label: "check" | "doctor"): void {
   const cwd = resolve(process.cwd());
@@ -87,9 +107,19 @@ function runCheck(label: "check" | "doctor"): void {
   if (report.ok) {
     console.log(`AgentFlow ${label}: OK`);
   } else {
-    console.log(`AgentFlow ${label}: missing files`);
-    for (const relative of report.missing) {
-      console.log(`- ${relative}`);
+    if (report.missing.length) {
+      console.log(`AgentFlow ${label}: missing files`);
+      for (const relative of report.missing) {
+        console.log(`- ${relative}`);
+      }
+    }
+    if (report.drift.length) {
+      console.log(
+        `AgentFlow ${label}: drifted entrypoints (no longer point to .agentflow/AGENTS.md)`,
+      );
+      for (const relative of report.drift) {
+        console.log(`- ${relative}  (fix: flow editors apply --force)`);
+      }
     }
     process.exitCode = 1;
   }
@@ -106,6 +136,11 @@ function printDiagnostics(cwd: string): void {
     for (const missing of report.missing) {
       console.log(
         `- [missing] AgentFlow ${missing}: run \`flow init\` or \`flow check\``,
+      );
+    }
+    for (const drift of report.drift) {
+      console.log(
+        `- [drift] AgentFlow ${drift}: run \`flow editors apply --force\``,
       );
     }
   }
@@ -151,7 +186,9 @@ program
     console.log("Local AI coding tools:");
     for (const tool of tools) {
       const location = tool.path || "not found on PATH";
-      console.log(`- [${tool.status}] ${tool.display} (${tool.command}): ${location}`);
+      console.log(
+        `- [${tool.status}] ${tool.display} (${tool.command}): ${location}`,
+      );
     }
   });
 

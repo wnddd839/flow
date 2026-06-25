@@ -1,9 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
@@ -60,7 +55,10 @@ export function loadEditorConfig(home?: string): EditorConfig {
 
     const stripped = line.trim();
     if (section === "enabled" && stripped.startsWith("-")) {
-      const value = stripped.slice(1).trim().replace(/^["']|["']$/g, "");
+      const value = stripped
+        .slice(1)
+        .trim()
+        .replace(/^["']|["']$/g, "");
       if (value) enabled.push(value);
     } else if (section === "custom") {
       const indent = line.length - line.trimStart().length;
@@ -131,7 +129,9 @@ export function normalizeEditorNames(names: Iterable<string>): string[] {
     if (!name) continue;
     if (!(name in catalog)) {
       const known = Object.keys(catalog).sort().join(", ");
-      throw new Error(`Unknown editor: ${JSON.stringify(raw)}. Known editors: ${known}`);
+      throw new Error(
+        `Unknown editor: ${JSON.stringify(raw)}. Known editors: ${known}`,
+      );
     }
     if (!normalized.includes(name)) normalized.push(name);
   }
@@ -169,7 +169,9 @@ export function getEnabledEditors(home?: string): EditorSpec[] {
 export function enableEditor(name: string, home?: string): EditorSpec {
   const catalog = allEditors(home);
   if (!(name in catalog)) {
-    throw new Error(`Unknown editor: ${name}. Use 'flow editors add-custom' first.`);
+    throw new Error(
+      `Unknown editor: ${name}. Use 'flow editors add-custom' first.`,
+    );
   }
   const config = loadEditorConfig(home);
   if (!config.enabled.includes(name)) {
@@ -191,15 +193,26 @@ export function validateRelativeEntrypoint(entrypoint: string): string {
   const cleaned = String(entrypoint).trim();
   if (!cleaned) throw new Error("Editor entrypoint path is required");
   if (cleaned.startsWith("/") || /^[A-Za-z]:[\\/]/.test(cleaned)) {
-    throw new Error(`Editor entrypoint must be a project-relative path: ${JSON.stringify(entrypoint)}`);
+    throw new Error(
+      `Editor entrypoint must be a project-relative path: ${JSON.stringify(entrypoint)}`,
+    );
   }
   const posix = cleaned.replace(/\\/g, "/");
   const parts = posix.split("/").filter((part) => part.length > 0);
   if (parts.some((part) => part === "..")) {
-    throw new Error(`Editor entrypoint must not contain '..': ${JSON.stringify(entrypoint)}`);
+    throw new Error(
+      `Editor entrypoint must not contain '..': ${JSON.stringify(entrypoint)}`,
+    );
   }
-  if (!parts.length || posix.endsWith("/") || parts.at(-1) === "." || parts.at(-1) === "..") {
-    throw new Error(`Editor entrypoint must include a file name: ${JSON.stringify(entrypoint)}`);
+  if (
+    !parts.length ||
+    posix.endsWith("/") ||
+    parts.at(-1) === "." ||
+    parts.at(-1) === ".."
+  ) {
+    throw new Error(
+      `Editor entrypoint must include a file name: ${JSON.stringify(entrypoint)}`,
+    );
   }
   return cleaned;
 }

@@ -1,10 +1,13 @@
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { BASE_REQUIRED_FILES, doctorProject } from "../src/core/check.js";
 import { initProject } from "../src/core/init.js";
-import { getEnabledEditors, normalizeEditorNames } from "../src/editors/index.js";
+import {
+  getEnabledEditors,
+  normalizeEditorNames,
+} from "../src/editors/index.js";
 import { pickEditors } from "../src/init-ui.js";
 import { agentsMd } from "../src/templates.js";
 
@@ -50,7 +53,9 @@ describe("initProject", () => {
 
     const enabled = new Set(getEnabledEditors(home).map((s) => s.name));
     expect(enabled).toEqual(new Set(["qoder", "cursor"]));
-    expect(existsSync(join(root, ".qoder/skills/agentflow/SKILL.md"))).toBe(true);
+    expect(existsSync(join(root, ".qoder/skills/agentflow/SKILL.md"))).toBe(
+      true,
+    );
     expect(existsSync(join(root, ".cursor/rules/agentflow.mdc"))).toBe(true);
     expect(existsSync(join(root, "AGENTS.md"))).toBe(false);
   });
@@ -98,6 +103,21 @@ describe("doctorProject", () => {
     initProject(root, { home });
     const report = doctorProject(root, home);
     expect(report.ok).toBe(true);
+  });
+
+  it("reports drift when an entrypoint no longer points to agentflow", () => {
+    const root = mkdtempSync(join(tmpdir(), "flow-check-"));
+    const home = join(root, "home");
+    dirs.push(root);
+    initProject(root, { editors: ["cursor"], home });
+
+    const entry = join(root, ".cursor", "rules", "agentflow.mdc");
+    writeFileSync(entry, "no pointer here", "utf8");
+
+    const report = doctorProject(root, home);
+    expect(report.ok).toBe(false);
+    expect(report.drift).toContain(".cursor/rules/agentflow.mdc");
+    expect(report.missing).not.toContain(".cursor/rules/agentflow.mdc");
   });
 });
 
