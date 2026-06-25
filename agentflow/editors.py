@@ -44,6 +44,22 @@ def _builtin_editors() -> dict[str, EditorSpec]:
 KNOWN_EDITORS: dict[str, EditorSpec] = _builtin_editors()
 
 
+def normalize_editor_names(names: Iterable[str]) -> list[str]:
+    """校验并去重内置编辑器名称（小写）。"""
+    catalog = _builtin_editors()
+    normalized: list[str] = []
+    for raw in names:
+        name = str(raw).strip().lower()
+        if not name:
+            continue
+        if name not in catalog:
+            known = ", ".join(sorted(catalog))
+            raise ValueError(f"Unknown editor: {raw!r}. Known editors: {known}")
+        if name not in normalized:
+            normalized.append(name)
+    return normalized
+
+
 # -- Persistence --------------------------------------------------------------
 
 

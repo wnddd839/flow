@@ -2,8 +2,8 @@
 
 <!-- ═══════════════════════════════════════════════════════════
      本文件边界（不可删除，不可改写）
-     ✅ 只写：这个项目【怎么写代码】：命名、结构、风格、禁用模式
-     ❌ 不写：项目是什么/怎么运行（→ project.md）、业务规则（→ business.md）、历史踩坑（→ pitfalls.md）
+     只写：这个项目【怎么写代码】：命名、结构、风格、禁用模式
+     不写：项目是什么/怎么运行（→ project.md）、业务规则（→ business.md）、历史踩坑（→ pitfalls.md）
      判断标准：如果一段内容换到别的项目还能用，它就不属于这里。
      ═══════════════════════════════════════════════════════════ -->
 
@@ -25,7 +25,8 @@
 |--------|--------|
 | 磁盘写入 / 检查逻辑 | `core.py` |
 | 纯字符串模板（骨架、薄入口） | `templates.py` |
-| 用户级编辑器配置与入口 reconcile | `editors.py` |
+| 用户级编辑器配置、名称校验、入口 reconcile | `editors.py` |
+| `flow init` 编辑器多选（交互 / 回退） | `init_ui.py` |
 | 环境探测（PATH 工具、诊断项） | `diagnostics.py` |
 | argparse 与命令分发 | `cli.py` |
 | 交互 REPL | `repl.py` |
@@ -33,7 +34,9 @@
 
 **新增 CLI 子命令**：在 `cli.py` 的 `_build_parser` 注册 → 实现 `_cmd_*` → 加入 `COMMANDS` 字典。
 
-**新增内置编辑器**：在 `templates.py` 同步更新 `DEFAULT_PLATFORMS`、`PLATFORM_DISPLAY`、`PLATFORM_ENTRYPOINTS`，并补充 `tests/test_init.py` 断言。
+**新增内置编辑器**：在 `templates.py` 同步更新 `PLATFORM_DISPLAY`、`PLATFORM_ENTRYPOINTS`（`editors.py` 从中派生内置目录），并补充 `tests/test_init.py` 断言。
+
+**editors 与 tools 是两个独立清单**：`editors`（薄入口写入目标，源自 `templates.PLATFORM_*`）与 `diagnostics.KNOWN_TOOLS`（PATH 上可探测的 AI CLI）回答不同问题，不必逐一对应，改其一不要顺手改另一个。
 
 **避免循环导入**：`editors.apply_editors` 等对 `templates` 使用函数内局部 import。
 
@@ -48,6 +51,7 @@
 - 用户可见输出：CLI 用 `print`；REPL 用 `rich`（`Console`、`Panel`、`Table`）。
 - 无项目级 ruff/black 配置；遵循现有 4 空格缩进与 `import` 分组习惯（标准库 → 第三方 → 本地）。
 - 模板正文用 `textwrap.dedent`，保持生成 Markdown 可读。
+- 文档与模板正文不使用 emoji；边界声明用「只写 / 不写」纯文本。
 
 ## 禁用模式
 
@@ -57,3 +61,4 @@
 - **不删除用户自有编辑器配置**：禁用编辑器时仅删除带 `AGENTFLOW_GENERATED_MARKER` 或可识别的薄入口，不删 `.cursor/` 等顶层目录及其他用户文件。
 - **不接受越界路径**：自定义编辑器入口必须是项目内相对路径，禁止 `..` 与绝对路径（见 `editors._validate_relative_entrypoint`）。
 - **不在业务逻辑层调用 AI API**：`diagnostics` 只做本地 PATH 检测，不做网络请求。
+- **不做平台绑定式集成**：不添加某一 agent/编辑器的 hook、插件或会话编排；保持地基工具定位。

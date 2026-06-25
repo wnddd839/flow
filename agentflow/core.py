@@ -18,20 +18,17 @@ BASE_REQUIRED_FILES = [
     ".agentflow/skills/README.md",
 ]
 
-DEFAULT_EDITOR_NAMES = list(templates.DEFAULT_PLATFORMS)
-
-
 def init_project(
     project_dir: str | Path,
     editors: Iterable[str] | None = None,
     force: bool = False,
     home: str | Path | None = None,
 ) -> dict[str, list[str]]:
-    """在项目中生成规范文档骨架与各编辑器薄入口。
+    """在项目中生成规范文档骨架与（可选）编辑器薄入口。
 
-    - 默认启用全部 6 个内置编辑器并生成薄入口
-    - ``editors=...`` 可缩减（非交互，供脚本使用）
-    - 不弹窗、不问业务问题，只写空架子
+    - ``editors=[]`` 或省略且由 CLI 解析为空：只生成 ``.agentflow/`` 骨架
+    - ``editors=["cursor", ...]``：额外生成对应平台薄入口
+    - 不询问业务问题，只写文件
     """
 
     from .editors import (
@@ -53,11 +50,12 @@ def init_project(
         ".agentflow/skills/README.md": templates.skills_readme(),
     }
 
-    editor_names = (
-        [name.strip().lower() for name in editors if str(name).strip()]
-        if editors is not None
-        else list(DEFAULT_EDITOR_NAMES)
-    )
+    if editors is None:
+        editor_names: list[str] = []
+    else:
+        from .editors import normalize_editor_names
+
+        editor_names = normalize_editor_names(editors)
     config = load_editor_config(home=home)
     save_editor_config(editor_names, config.get("custom", {}), home=home)
 

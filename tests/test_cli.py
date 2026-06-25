@@ -30,17 +30,17 @@ class CliTests(unittest.TestCase):
     def test_cli_init_creates_skeleton(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             project_dir = Path(directory)
-            result = run_cli(project_dir, "init")
+            result = run_cli(project_dir, "init", "--skeleton-only")
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Initialized specification skeleton", result.stdout)
             self.assertTrue((project_dir / ".agentflow" / "AGENTS.md").is_file())
-            self.assertTrue((project_dir / "AGENTS.md").is_file())
+            self.assertFalse((project_dir / "AGENTS.md").is_file())
 
     def test_cli_check_after_init(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             project_dir = Path(directory)
-            run_cli(project_dir, "init")
+            run_cli(project_dir, "init", "--skeleton-only")
             result = run_cli(project_dir, "check")
 
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -51,6 +51,14 @@ class CliTests(unittest.TestCase):
             result = run_cli(Path(directory), "check")
             self.assertEqual(result.returncode, 1)
             self.assertIn("missing files", result.stdout)
+
+    def test_cli_version(self) -> None:
+        from agentflow import __version__
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_cli(Path(directory), "--version")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(__version__, result.stdout + result.stderr)
 
     def test_cli_tools_json(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -69,6 +77,8 @@ class CliTests(unittest.TestCase):
             result = run_cli(Path(directory), input_text="/init\n/quit\n")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Init complete", result.stdout)
+            # Non-TTY stdin: picker skips editors, skeleton only
+            self.assertFalse((Path(directory) / "AGENTS.md").exists())
 
 
 if __name__ == "__main__":

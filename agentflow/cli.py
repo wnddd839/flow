@@ -7,8 +7,11 @@ import json
 import sys
 from pathlib import Path
 
+from . import __version__
 from .core import doctor_project, init_project
 from .diagnostics import collect_diagnostics, detect_tools
+from .editors import normalize_editor_names
+from .init_ui import pick_editors
 from .templates import AGENT_INSTRUCTIONS
 
 
@@ -37,14 +40,28 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="flow",
         description="Initialize strict project specification docs for AI coding tools.",
     )
+    parser.add_argument(
+        "-V", "--version", action="version", version=f"flow {__version__}"
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     init_parser = subparsers.add_parser("init", help="Create .agentflow specification skeleton.")
+    init_parser.add_argument(
+        "editor_names",
+        nargs="*",
+        metavar="editor",
+        help="Editors to enable, e.g. flow init cursor claude",
+    )
     init_parser.add_argument("--force", action="store_true", help="Overwrite existing files.")
     init_parser.add_argument(
         "--editors",
         default=None,
-        help="Comma-separated editors (default: all six built-ins).",
+        help="Comma-separated editors (same as positional names).",
+    )
+    init_parser.add_argument(
+        "--skeleton-only",
+        action="store_true",
+        help="Only create .agentflow/; do not generate any thin entrypoints.",
     )
 
     subparsers.add_parser("check", help="Check specification skeleton files.")
@@ -79,16 +96,35 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_init(args: argparse.Namespace, cwd: Path) -> int:
-    editor_list: list[str] | None = None
-    if args.editors is not None:
-        editor_list = [item.strip() for item in args.editors.split(",") if item.strip()]
+    try:
+        editor_list = _resolve_init_editors(args)
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+
     result = init_project(cwd, editors=editor_list, force=args.force)
     print(f"Initialized specification skeleton in {cwd}")
+    if editor_list:
+        print(f"Editors: {', '.join(editor_list)}")
+    else:
+        print("Editors: (none — .agentflow/ skeleton only)")
     print(f"Created: {len(result['created'])}")
     print(f"Skipped: {len(result['skipped'])}")
     if result.get("editors_removed"):
         print(f"Removed disabled editor entrypoints: {', '.join(result['editors_removed'])}")
     return 0
+
+
+def _resolve_init_editors(args: argparse.Namespace) -> list[str]:
+    if args.skeleton_only:
+        return []
+    if args.editor_names:
+        return normalize_editor_names(args.editor_names)
+    if args.editors is not None:
+        return normalize_editor_names(
+            [item.strip() for item in args.editors.split(",") if item.strip()]
+        )
+    return pick_editors()
 
 
 def _cmd_check(args: argparse.Namespace, cwd: Path) -> int:

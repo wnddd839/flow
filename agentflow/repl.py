@@ -9,7 +9,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from . import __version__
 from .core import doctor_project, init_project
+from .init_ui import pick_editors
 from .diagnostics import detect_tools
 from .templates import AGENT_INSTRUCTIONS
 
@@ -101,7 +103,7 @@ def _print_banner(root: Path) -> None:
             f"Project: [bold]{root}[/]\n"
             f"Status: [bold]{phase}[/]\n"
             f"Missing: [bold]{len(report['missing'])}[/]",
-            title="[bold cyan]Flow — 项目规范初始化器[/]",
+            title=f"[bold cyan]Flow v{__version__} — 项目规范初始化器[/]",
             border_style="cyan",
         )
     )
@@ -122,11 +124,14 @@ def _print_help() -> None:
 
 
 def _run_init(root: Path) -> None:
-    result = init_project(root)
+    editors = pick_editors()
+    result = init_project(root, editors=editors)
+    editor_line = ", ".join(editors) if editors else "(none — skeleton only)"
     console.print(
         Panel(
             f"Created: [bold]{len(result['created'])}[/]\n"
-            f"Skipped: [dim]{len(result['skipped'])}[/]",
+            f"Skipped: [dim]{len(result['skipped'])}[/]\n"
+            f"Editors: [bold]{editor_line}[/]",
             title="[green]Init complete[/]",
             border_style="green",
         )

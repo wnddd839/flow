@@ -9,7 +9,18 @@ class TemplateTests(unittest.TestCase):
     def test_agents_md_has_maintenance_contract(self) -> None:
         content = templates.agents_md()
         self.assertIn("文档维护契约", content)
-        self.assertIn("每条信息**只出现在一个文档里**", content)
+        self.assertIn("每条信息只出现在一个文档里", content)
+
+    def test_agents_md_has_completion_gate(self) -> None:
+        content = templates.agents_md()
+        self.assertIn("大改动", content)
+        self.assertIn("完成定义", content)
+        self.assertIn("未完成同步前", content)
+
+    def test_agent_instructions_mention_completion(self) -> None:
+        instructions = templates.AGENT_INSTRUCTIONS
+        self.assertIn("完成定义", instructions)
+        self.assertIn("未同步", instructions)
 
     def test_skeletons_have_boundary_markers(self) -> None:
         for factory in (
@@ -19,8 +30,8 @@ class TemplateTests(unittest.TestCase):
             templates.pitfalls_skeleton,
         ):
             content = factory()
-            self.assertIn("✅ 只写", content)
-            self.assertIn("❌ 不写", content)
+            self.assertIn("只写：", content)
+            self.assertIn("不写：", content)
             self.assertIn("判断标准", content)
 
     def test_project_skeleton_has_fixed_sections(self) -> None:
