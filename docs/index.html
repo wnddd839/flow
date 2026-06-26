@@ -636,15 +636,15 @@
           </div>
           <h1>给 AI 编码<br>铺一层规范地基</h1>
           <p class="hero-lead">
-            一行命令生成 <code style="font-family:var(--mono);font-size:0.92em;background:#f0efec;padding:0.1em 0.35em;border-radius:4px">.agentflow/</code> 文档骨架，
-            按需写入 Cursor / Claude 等薄入口。不编排工作流，不绑定编辑器，不强制模型。
+            运行 <code style="font-family:var(--mono);font-size:0.92em;background:#f0efec;padding:0.1em 0.35em;border-radius:4px">flow</code> 进入交互工作台，↑↓ 选择即可生成
+            <code style="font-family:var(--mono);font-size:0.92em;background:#f0efec;padding:0.1em 0.35em;border-radius:4px">.agentflow/</code> 骨架与薄入口。不编排工作流，不绑定编辑器，不强制模型。
           </p>
           <div class="hero-actions">
             <a class="btn btn-dark" href="#quickstart">快速开始</a>
             <a class="btn btn-ghost" href="https://github.com/wnddd839/flow">查看源码</a>
           </div>
           <div class="install-box">
-            <code id="install-cmd">npx @wnddd8339/flow init claude</code>
+            <code id="install-cmd">npm i -g @wnddd8339/flow &amp;&amp; flow</code>
             <button class="copy-btn" type="button" data-copy="install-cmd">复制</button>
           </div>
         </div>
@@ -667,6 +667,19 @@
           <p>Flow 只做规范层的「地基」——结构、入口、存在性检查。文档正文与维护靠 AGENTS.md 契约，由 AI 与开发者完成。</p>
         </div>
         <div class="bento">
+          <article class="card span-12">
+            <div class="icon icon-blue">★</div>
+            <h3>交互工作台（运行 <code style="font-family:var(--mono);font-size:0.85em">flow</code>）</h3>
+            <p style="margin-bottom:0.9rem">一屏看清项目状态：System Status 仪表盘 + Quick Wizard，↑↓ 选择即可 init / check / instructions，每次操作后状态实时刷新。clack 不可用时自动降级为 <code style="font-family:var(--mono);font-size:0.85em">flow ›</code> 数字输入。</p>
+            <div class="tree" style="margin-top:0">
+              <span class="note"> ╭─ System Status ──────────╮  ╭─ Quick Wizard ──╮</span><br>
+              <span class="note"> │ Phase    not initialized │  │ 1 Setup / init  │</span><br>
+              <span class="note"> │ Doctor   —               │  │ 2 Doctor        │</span><br>
+              <span class="note"> │ Editors  none            │  │ 3 Instructions  │</span><br>
+              <span class="note"> ╰──────────────────────────╯  ╰─────────────────╯</span><br>
+              <span class="dir"> ● Setup / init — 选择编辑器并初始化</span> <span class="note">‹推荐›</span>
+            </div>
+          </article>
           <article class="card span-4">
             <div class="icon icon-green">01</div>
             <h3>边界分明的骨架</h3>
@@ -842,14 +855,22 @@ flow instructions                 # 各工具触发话术</code></pre>
 
   <script>
     const lines = [
-      { t: "prompt", s: "$ flow init" },
-      { t: "dim", s: "◆ 如何初始化？" },
-      { t: "dim", s: "  › 选择编辑器" },
-      { t: "dim", s: "    自动启用 PATH 上的工具" },
-      { t: "dim", s: "    仅生成 .agentflow/ 骨架" },
-      { t: "dim", s: "↑↓ 移动 · 回车确认" },
-      { t: "prompt", s: "$ flow check" },
-      { t: "ok", s: "AgentFlow check: OK" },
+      { t: "prompt", s: "$ flow" },
+      { t: "dim", s: "  _____ _" },
+      { t: "dim", s: " |  ___| |_____   __ __" },
+      { t: "dim", s: " | |_  | / _ \\ \\ V  V /" },
+      { t: "dim", s: " |_|   |_\\___/   \\_/\\_/" },
+      { t: "dim", s: "" },
+      { t: "dim", s: " ╭─ System Status ──────────╮" },
+      { t: "dim", s: " │ Phase    not initialized │" },
+      { t: "dim", s: " │ Doctor   —               │" },
+      { t: "dim", s: " │ Editors  none            │" },
+      { t: "dim", s: " ╰──────────────────────────╯" },
+      { t: "dim", s: "" },
+      { t: "dim", s: " ◆ 选择操作  ↑↓ 选择 · 回车确认" },
+      { t: "ok", s: " ● Setup / init — 初始化  ‹推荐›" },
+      { t: "dim", s: " ○ Check   ○ Instructions   ○ Tools" },
+      { t: "ok", s: " ✓ 已生成 .agentflow/ 骨架" },
     ];
 
     const term = document.getElementById("terminal-demo");

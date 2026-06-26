@@ -2,7 +2,7 @@
 
 <img src="docs/assets/banner.png" alt="Flow — spec foundation for AI coding" width="820">
 
-<h3>轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基</h3>
+<h3>好看的离线工作台 CLI，为任意代码仓库铺设 AI 编码规范的地基</h3>
 
 <p>
 <a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.3-346538?style=flat-square" alt="version"></a>
@@ -14,6 +14,7 @@
 <p>
 <a href="https://wnddd839.github.io/flow/"><b>文档站点</b></a> ·
 <a href="https://www.npmjs.com/package/@wnddd8339/flow"><b>npm</b></a> ·
+<a href="#工作台">工作台</a> ·
 <a href="#快速开始">快速开始</a> ·
 <a href="#按编辑器配置">按编辑器配置</a> ·
 <a href="#命令">命令</a>
@@ -23,6 +24,7 @@
 
 ---
 
+直接运行 `flow` 进入**交互工作台**：一屏看清项目状态，↑↓ 选择就能 init / check。  
 `flow init` 生成 `.agentflow/` 规范文档骨架；按需为所用 AI 工具生成薄入口指针。  
 文档内容由首个接手的 AI 分析代码后填写；Flow **不**绑定特定编辑器，**不**强制模型行为。
 
@@ -30,15 +32,47 @@
 
 | | |
 |---|---|
-| **是什么** | 规范层的「地基」工具 — 骨架、薄入口、存在性检查 |
+| **是什么** | 规范层的「地基」工具 — 工作台 + 骨架 + 薄入口 + 存在性检查 |
 | **不是什么** | Agent 编排器、hook 插件、文档代写器 |
-| **怎么用** | `flow init`（终端 ↑↓ 选编辑器）或 `flow init claude` → AI 读 `AGENTS.md` 填骨架 |
+| **怎么用** | 跑 `flow` 进工作台 → ↑↓ 选 init → 勾选编辑器 → AI 读 `AGENTS.md` 填骨架 |
+
+## 工作台
+
+在交互终端（Windows Terminal / Cursor 终端 / cmd）里直接运行 `flow`：
+
+```text
+ _____ _
+|  ___| | _____      __
+| |_  | |/ _ \ \ /\ / /
+|  _| | | (_) \ V  V /
+|_|   |_|\___/ \_/\_/
+
+ Flow · AI 编码规范工作台 · 离线 CLI · 用 ↑↓ 选择，回车确认
+
+ ╭─ System Status ────────────╮  ╭─ Quick Wizard ───────╮
+ │  Project  D:\my-app        │  │ 1  Setup / init      │
+ │    Phase  not initialized  │  │ 2  Doctor 健康检查    │
+ │   Doctor  —                │  │ 3  Instructions      │
+ │  Editors  none             │  │ 0  Exit              │
+ ╰────────────────────────────╯  ╰──────────────────────╯
+
+ Quick Commands:  /init  /check  /instructions  /tools  /editors  /help
+
+ ◆ 选择操作（↑↓ 选择，回车确认）
+ │ ● Setup / init — 选择编辑器并初始化   推荐
+ │ ○ Check — 健康检查
+ │ ○ Instructions — 触发话术
+```
+
+- **仪表盘** 实时显示项目路径、阶段、健康状况、已启用编辑器；每次操作后自动刷新。
+- **↑↓ 菜单** 选择动作、回车确认；clack 不可用时自动降级为 `flow ›` 数字/命令输入。
+- 选 init → **空格** 勾选编辑器（PATH 上检测到的默认勾选）→ 生成骨架 → 给出下一步指引。
 
 ## 快速开始
 
 ```bash
 # 无需全局安装
-flow                                # 进入交互工作台（仪表盘 + ↑↓ 菜单，推荐）
+flow                                # 进入交互工作台（推荐）
 flow init                           # 终端里 ↑↓ 分步选择编辑器
 flow init claude                    # 或直接指定平台
 flow init cursor claude             # 多平台一次配置
@@ -47,20 +81,7 @@ flow check
 flow instructions                   # 复制各工具的「填骨架」触发话术
 ```
 
-**工作台**（在 Windows Terminal / Cursor 终端 / cmd 里直接运行 `flow`）：
-
-- 顶部仪表盘显示 **System Status**（项目 / 阶段 / 健康 / 已启用编辑器）与 **Quick Wizard**
-- 用 **↑↓** 选择动作、回车确认；clack 不可用时自动降级为 `flow ›` 数字/命令输入
-- 选 init → 勾选编辑器 → 生成骨架 → 给出下一步指引 → 状态实时刷新
-
-**交互式 init**（Windows Terminal / Cursor 终端 / cmd）：
-
-- 运行 `flow` 或 `flow init`，用 **↑↓** 移动、**空格** 多选勾选、**回车** 确认
-- 第一步选：手动选编辑器 / 自动启用 PATH 上的工具 / 仅骨架
-- 第二步：勾选要生成薄入口的平台（PATH 上检测到的会默认勾选）
-- Clack 不可用时（如部分 Windows CMD）会降级为数字菜单（输入 `1,3`）
-
-**非交互环境**（CI、脚本）：必须显式指定编辑器，或 `--skeleton-only`：
+**非交互环境**（CI、脚本、管道）：必须显式指定编辑器，或 `--skeleton-only`：
 
 ```bash
 npx @wnddd8339/flow init claude
