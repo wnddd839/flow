@@ -357,6 +357,155 @@
       grid-template-columns: repeat(12, 1fr);
     }
 
+    .span-12 { grid-column: span 12; }
+
+    /* Workbench showcase: text + terminal side by side */
+    .workbench-showcase {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: 1fr;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (min-width: 900px) {
+      .workbench-showcase {
+        grid-template-columns: 1fr 1.05fr;
+        align-items: stretch;
+      }
+    }
+
+    .workbench-copy {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .workbench-copy h3 {
+      margin: 0 0 0.65rem;
+      font-size: 1.15rem;
+    }
+
+    .workbench-copy p {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .workbench-bullets {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .workbench-bullets li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      padding-left: 1.1rem;
+      position: relative;
+    }
+
+    .workbench-bullets li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--blue-text);
+      font-weight: 600;
+    }
+
+    .workbench-terminal {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.65;
+      min-height: 280px;
+    }
+
+    .workbench-terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.7rem 0.9rem;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+
+    .workbench-terminal-bar .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .workbench-terminal-bar .dot-r { background: #ef4444; }
+    .workbench-terminal-bar .dot-y { background: #f59e0b; }
+    .workbench-terminal-bar .dot-g { background: #10b981; }
+
+    .workbench-terminal-title {
+      margin-left: 0.4rem;
+      color: #64748b;
+      font-size: 0.72rem;
+    }
+
+    .workbench-terminal-body {
+      padding: 1rem 1.1rem 1.2rem;
+      color: #cbd5e1;
+    }
+
+    .wb-dim { color: #64748b; }
+    .wb-cyan { color: #22d3ee; }
+    .wb-green { color: #34d399; }
+    .wb-blue { color: #60a5fa; }
+    .wb-red { color: #f87171; }
+    .wb-purple { color: #a78bfa; }
+    .wb-pill {
+      display: inline-block;
+      background: #1e293b;
+      color: #93c5fd;
+      padding: 0.1em 0.45em;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      margin-right: 0.25rem;
+    }
+
+    /* Equal-height feature grid */
+    .feature-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 640px) {
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 960px) {
+      .feature-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .feature-grid .card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feature-grid .card p {
+      flex: 1;
+    }
+
+    .feature-grid .card .tree {
+      margin-top: auto;
+      background: #fbfbf9;
+    }
+
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -666,41 +815,69 @@
           <h2>基础设施，不是编排器</h2>
           <p>Flow 只做规范层的「地基」——结构、入口、存在性检查。文档正文与维护靠 AGENTS.md 契约，由 AI 与开发者完成。</p>
         </div>
-        <div class="bento">
-          <article class="card span-12">
+        <div class="workbench-showcase">
+          <article class="workbench-copy">
             <div class="icon icon-blue">★</div>
-            <h3>交互工作台（运行 <code style="font-family:var(--mono);font-size:0.85em">flow</code>）</h3>
-            <p style="margin-bottom:0.9rem">一屏看清项目状态：System Status 仪表盘 + Quick Wizard，↑↓ 选择即可 init / check / instructions，每次操作后状态实时刷新。clack 不可用时自动降级为 <code style="font-family:var(--mono);font-size:0.85em">flow ›</code> 数字输入。</p>
-            <div class="tree" style="margin-top:0">
-              <span class="note"> ╭─ System Status ──────────╮  ╭─ Quick Wizard ──╮</span><br>
-              <span class="note"> │ Phase    not initialized │  │ 1 Setup / init  │</span><br>
-              <span class="note"> │ Doctor   —               │  │ 2 Doctor        │</span><br>
-              <span class="note"> │ Editors  none            │  │ 3 Instructions  │</span><br>
-              <span class="note"> ╰──────────────────────────╯  ╰─────────────────╯</span><br>
-              <span class="dir"> ● Setup / init — 选择编辑器并初始化</span> <span class="note">‹推荐›</span>
-            </div>
+            <h3>交互工作台</h3>
+            <p>在终端里直接运行 <code style="font-family:var(--mono);font-size:0.88em;background:#f0efec;padding:0.12em 0.4em;border-radius:4px">flow</code>，一屏看清项目状态，↑↓ 选择就能 init / check / instructions。</p>
+            <ul class="workbench-bullets">
+              <li>System Status 实时显示阶段、健康、已启用编辑器</li>
+              <li>Quick Wizard 数字快捷键 + ↑↓ 菜单双模式</li>
+              <li>init 完自动给出下一步指引，状态即时刷新</li>
+              <li>Windows CMD 不可用时降级为 <code style="font-family:var(--mono);font-size:0.85em">flow ›</code> 输入</li>
+            </ul>
           </article>
-          <article class="card span-4">
+          <div class="workbench-terminal" aria-hidden="true">
+            <div class="workbench-terminal-bar">
+              <span class="dot dot-r"></span>
+              <span class="dot dot-y"></span>
+              <span class="dot dot-g"></span>
+              <span class="workbench-terminal-title">flow — workbench</span>
+            </div>
+            <div class="workbench-terminal-body">
+              <span class="wb-cyan"> _____ _</span><br>
+              <span class="wb-cyan">|  ___| | _____      __</span><br>
+              <span class="wb-blue">| |_  | |/ _ \ \ /\ / /</span><br>
+              <span class="wb-purple">|  _| | | (_) \ V  V / </span><br>
+              <span class="wb-purple">|_|   |_|\___/ \_/\_/  </span><br>
+              <br>
+              <span class="wb-dim">╭─ System Status ────────╮  ╭─ Quick Wizard ──╮</span><br>
+              <span class="wb-dim">│</span> <span class="wb-dim">Phase</span>  <span class="wb-red">not initialized</span>  <span class="wb-dim">│  │</span> <span class="wb-cyan">1</span> Setup / init   <span class="wb-dim">│</span><br>
+              <span class="wb-dim">│</span> <span class="wb-dim">Doctor</span> <span class="wb-dim">—</span>              <span class="wb-dim">│  │</span> <span class="wb-dim">2</span> Doctor         <span class="wb-dim">│</span><br>
+              <span class="wb-dim">│</span> <span class="wb-dim">Editors</span> <span class="wb-dim">none</span>           <span class="wb-dim">│  │</span> <span class="wb-dim">3</span> Instructions   <span class="wb-dim">│</span><br>
+              <span class="wb-dim">╰────────────────────────╯  ╰─────────────────╯</span><br>
+              <br>
+              <span class="wb-dim">Quick Commands:</span>
+              <span class="wb-pill">/init</span><span class="wb-pill">/check</span><span class="wb-pill">/instructions</span><br>
+              <br>
+              <span class="wb-green">●</span> Setup / init — 选择编辑器并初始化 <span class="wb-dim">‹推荐›</span><br>
+              <span class="wb-dim">○</span> Check — 健康检查<br>
+              <span class="wb-dim">○</span> Instructions — 触发话术
+            </div>
+          </div>
+        </div>
+        <div class="feature-grid">
+          <article class="card">
             <div class="icon icon-green">01</div>
             <h3>边界分明的骨架</h3>
             <p>project / conventions / business / pitfalls 各司其职，顶部「只写 / 不写」声明防止信息堆成一个大 README。</p>
           </article>
-          <article class="card span-4">
+          <article class="card">
             <div class="icon icon-blue">02</div>
             <h3>按需薄入口</h3>
             <p>只为你用的平台生成 CLAUDE.md、.cursor/rules 等指针，默认不堆满六个工具目录。</p>
           </article>
-          <article class="card span-4">
+          <article class="card">
             <div class="icon icon-yellow">03</div>
             <h3>契约靠提示词</h3>
             <p>AGENTS.md 写明首次接手、大改动同步、完成自检；Flow 不拦截、不 hook、不强制模型。</p>
           </article>
-          <article class="card span-8">
+          <article class="card">
             <div class="icon icon-green">04</div>
             <h3>始终生成的规范目录</h3>
-            <div class="tree" style="margin-top:0.75rem">
+            <div class="tree">
               <span class="dir">.agentflow/</span><br>
-              <span class="file">├── AGENTS.md</span> <span class="note"># 总入口 + 维护契约</span><br>
+              <span class="file">├── AGENTS.md</span> <span class="note"># 总入口</span><br>
               <span class="file">├── project.md</span> <span class="note"># 项目是什么</span><br>
               <span class="file">├── conventions.md</span> <span class="note"># 怎么写代码</span><br>
               <span class="file">├── business.md</span> <span class="note"># 业务是什么</span><br>
@@ -708,10 +885,15 @@
               <span class="file">└── skills/README.md</span> <span class="note"># skill 路由</span>
             </div>
           </article>
-          <article class="card span-4">
+          <article class="card">
             <div class="icon icon-red">05</div>
             <h3>check 验存在与漂移</h3>
-            <p><code style="font-family:var(--mono);font-size:0.85em">flow check</code> 确认骨架与已启用入口齐全，并检测薄入口是否仍指向 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/AGENTS.md</code>。</p>
+            <p><code style="font-family:var(--mono);font-size:0.85em">flow check</code> 确认骨架与已启用入口齐全，并检测薄入口是否仍指向 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/AGENTS.md</code>，提示未填写章节。</p>
+          </article>
+          <article class="card">
+            <div class="icon icon-blue">06</div>
+            <h3>项目级编辑器配置</h3>
+            <p>启用列表写入 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/editors.yaml</code>，每个项目独立配置，不会跨仓库污染。</p>
           </article>
         </div>
       </div>
