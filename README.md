@@ -5,7 +5,7 @@
 <h3>好看的离线工作台 CLI，为任意代码仓库铺设 AI 编码规范的地基</h3>
 
 <p>
-<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.3-346538?style=flat-square" alt="version"></a>
+<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.4-346538?style=flat-square" alt="version"></a>
 <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-18+-1f6c9f?style=flat-square" alt="node"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-787774?style=flat-square" alt="license"></a>
 <a href="https://wnddd839.github.io/flow/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-111111?style=flat-square" alt="docs"></a>
@@ -158,6 +158,7 @@ npm run check          # lint + typecheck + build + test
 node dist/cli.js --version
 ```
 
-> **v0.6.3** 起 `flow`（无参数）进入交互工作台：仪表盘 + ↑↓ 菜单，clack 不可用时降级为数字输入。  
+> **v0.6.4** 起 `init` 生成 `.agentflow/prompts.md`（首次接手 / 大更新 / 完成自检等可复制话术），运行 `flow prompts` 查看。  
+> **v0.6.3** 起 `flow`（无参数）进入交互工作台：仪表盘 + ↑↓ 菜单。  
 > **v0.6.2** 起 `flow init` 支持 ↑↓ 分步向导（`@clack/prompts` 1.6），并修复 Windows CMD 的 TTY 检测。  
 > **v0.6.1** 起 CLI 为 TypeScript 实现（npm 包 [`@wnddd8339/flow`](https://www.npmjs.com/package/@wnddd8339/flow)）。v0.5 及更早的 Python 版已移至 [`archive/python/`](archive/python/)。
