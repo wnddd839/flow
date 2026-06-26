@@ -1,6 +1,7 @@
 import { join, resolve } from "node:path";
 import {
   applyEditors,
+  type ConfigTarget,
   loadEditorConfig,
   normalizeEditorNames,
   saveEditorConfig,
@@ -29,8 +30,11 @@ export function initProject(
 
   const editorNames = editors === null ? [] : normalizeEditorNames(editors);
 
-  const config = loadEditorConfig(home);
-  saveEditorConfig(editorNames, config.custom, home);
+  // Persist editor choices to the PROJECT-level config so enabling editors in
+  // project A never silently changes what project B sees.
+  const target: ConfigTarget = { projectDir: root, home };
+  const config = loadEditorConfig(target);
+  saveEditorConfig(editorNames, config.custom, target);
 
   for (const [relative, factory] of Object.entries(SKELETON_FILES)) {
     const status = writeText(join(root, relative), factory(), force);
@@ -41,7 +45,7 @@ export function initProject(
     }
   }
 
-  const editorResult = applyEditors(root, home, force);
+  const editorResult = applyEditors(root, target, force);
   created.push(...editorResult.created);
   skipped.push(...editorResult.kept);
 

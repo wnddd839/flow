@@ -644,7 +644,7 @@
             <a class="btn btn-ghost" href="https://github.com/wnddd839/flow">查看源码</a>
           </div>
           <div class="install-box">
-            <code id="install-cmd">npx @wnddd8339/flow init cursor</code>
+            <code id="install-cmd">npx @wnddd8339/flow init claude</code>
             <button class="copy-btn" type="button" data-copy="install-cmd">复制</button>
           </div>
         </div>
@@ -766,13 +766,14 @@
           <h2>快速开始</h2>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>npx @wnddd8339/flow init cursor
+          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>npx @wnddd8339/flow init claude       # Claude Code
+npx @wnddd8339/flow init cursor       # Cursor
+npx @wnddd8339/flow init codex        # Codex
+npx @wnddd8339/flow init cursor claude # 多平台
 
-flow init                      # TTY 交互勾选编辑器
-flow init --skeleton-only      # 仅 .agentflow/
-flow init cursor               # 骨架 + Cursor 入口
-flow init cursor claude        # 多平台
-flow check                     # 存在性 + 薄入口漂移检测</code></pre>
+flow init --skeleton-only             # 仅 .agentflow/
+flow check                            # 存在性 + 漂移 + 骨架是否已填
+flow instructions                     # 各工具触发话术</code></pre>
         </div>
       </div>
     </section>
@@ -784,8 +785,9 @@ flow check                     # 存在性 + 薄入口漂移检测</code></pre>
           <h2>命令参考</h2>
         </div>
         <div class="commands">
-          <div class="cmd-row"><code>flow init</code><span>生成 .agentflow/；TTY 下交互选择编辑器</span></div>
-          <div class="cmd-row"><code>flow init cursor</code><span>生成骨架 + 指定平台薄入口</span></div>
+          <div class="cmd-row"><code>flow init [编辑器...]</code><span>codex / claude / cursor / kiro / qoder / antigravity，可组合</span></div>
+          <div class="cmd-row"><code>flow init claude</code><span>骨架 + Claude Code 薄入口（CLAUDE.md）</span></div>
+          <div class="cmd-row"><code>flow init cursor</code><span>骨架 + Cursor 薄入口</span></div>
           <div class="cmd-row"><code>flow init --skeleton-only</code><span>仅骨架，不生成薄入口</span></div>
           <div class="cmd-row"><code>flow check</code><span>检查骨架与已启用入口；检测薄入口是否漂移（doctor 为别名）</span></div>
           <div class="cmd-row"><code>flow editors list</code><span>查看 / 管理启用的编辑器</span></div>

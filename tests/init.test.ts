@@ -50,14 +50,16 @@ describe("initProject", () => {
 
     expect(existsSync(join(root, "AGENTS.md"))).toBe(false);
     expect(existsSync(join(root, "CLAUDE.md"))).toBe(false);
-    expect(getEnabledEditors(home)).toEqual([]);
+    expect(getEnabledEditors({ projectDir: root, home })).toEqual([]);
   });
 
   it("creates selected editor entrypoints", () => {
     const { root, home } = tempProject();
     initProject(root, { editors: ["qoder", "cursor"], home });
 
-    const enabled = new Set(getEnabledEditors(home).map((s) => s.name));
+    const enabled = new Set(
+      getEnabledEditors({ projectDir: root, home }).map((s) => s.name),
+    );
     expect(enabled).toEqual(new Set(["qoder", "cursor"]));
     expect(existsSync(join(root, ".qoder/skills/agentflow/SKILL.md"))).toBe(
       true,

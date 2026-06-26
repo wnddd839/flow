@@ -78,7 +78,7 @@ function findUnfilledSections(path: string): string[] {
 
 export function doctorProject(projectDir: string, home?: string): DoctorReport {
   const root = resolve(projectDir);
-  const enabled = getEnabledEditors(home);
+  const enabled = getEnabledEditors({ projectDir: root, home });
   const editorEntrypoints = enabled.map((spec) => spec.entrypoint);
   const missing: string[] = [];
   const drift: string[] = [];

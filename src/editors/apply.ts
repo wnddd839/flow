@@ -14,7 +14,7 @@ import {
   rootAgentsPointer,
   thinEntrypoint,
 } from "../templates.js";
-import { allEditors, getEnabledEditors } from "./config.js";
+import { allEditors, type ConfigTarget, getEnabledEditors } from "./config.js";
 
 export interface ApplyEditorsResult {
   created: string[];
@@ -89,11 +89,12 @@ function pruneEmptyParents(directory: string, stopAt: string): void {
 
 export function applyEditors(
   projectDir: string,
-  home?: string,
+  target?: ConfigTarget,
   force = false,
 ): ApplyEditorsResult {
   const resolvedRoot = resolve(projectDir);
-  const enabled = getEnabledEditors(home);
+  const lookup: ConfigTarget = { projectDir: resolvedRoot, home: target?.home };
+  const enabled = getEnabledEditors(lookup);
   const enabledNames = new Set(enabled.map((spec) => spec.name));
   const created: string[] = [];
   const kept: string[] = [];
@@ -117,7 +118,7 @@ export function applyEditors(
     created.push(spec.entrypoint);
   }
 
-  const catalog = allEditors(home);
+  const catalog = allEditors(lookup);
   for (const [name, spec] of Object.entries(catalog)) {
     if (enabledNames.has(name)) continue;
     const entrypointPath = safeProjectPath(resolvedRoot, spec.entrypoint);

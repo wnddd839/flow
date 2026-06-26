@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   PLATFORM_DISPLAY,
   PLATFORM_ENTRYPOINTS,
@@ -21,18 +21,78 @@ export interface EditorSpec {
   custom: boolean;
 }
 
+/**
+ * Resolve the editor config for a given context.
+ *
+ * Resolution order on READ:
+ *   1. project-level `.agentflow/editors.yaml` (if it exists)
+ *   2. global `~/.agentflow/editors.yaml` (or AGENTFLOW_HOME)
+ *
+ * On WRITE, `target.projectDir` makes us write the project-level file so
+ * `flow init` no longer mutates a shared global config that silently leaks
+ * across projects (the v1-era "I lost my other project's editors" bug).
+ */
+export interface ConfigTarget {
+  /** When set, project-level config is preferred (read) or written. */
+  projectDir?: string;
+  /** Global home override (mainly for tests). */
+  home?: string;
+}
+
 export function agentflowHome(home?: string): string {
   if (home) return home;
   const configured = process.env.AGENTFLOW_HOME;
   return configured ? configured : join(homedir(), ".agentflow");
 }
 
-function configPath(home?: string): string {
+function globalConfigPath(home?: string): string {
   return join(agentflowHome(home), EDITOR_CONFIG_FILE);
 }
 
-export function loadEditorConfig(home?: string): EditorConfig {
-  const path = configPath(home);
+/** Project-level config path, or null when no project context is given. */
+function projectConfigPath(projectDir?: string): string | null {
+  if (!projectDir) return null;
+  return join(resolve(projectDir), ".agentflow", EDITOR_CONFIG_FILE);
+}
+
+/**
+ * Load editor config with project-level priority.
+ *
+ * - If a project-level `.agentflow/editors.yaml` exists, it fully replaces
+ *   the global config for this project.
+ * - Otherwise the global `~/.agentflow/editors.yaml` is used.
+ */
+export function loadEditorConfig(target?: ConfigTarget): EditorConfig {
+  const projectPath = projectConfigPath(target?.projectDir);
+  const path =
+    projectPath && existsSync(projectPath)
+      ? projectPath
+      : globalConfigPath(target?.home);
+  return parseConfigFile(path);
+}
+
+/**
+ * Save editor config. Writes project-level when `target.projectDir` is set,
+ * otherwise the global home. This keeps per-project editor choices out of
+ * the shared global config.
+ */
+export function saveEditorConfig(
+  enabled: Iterable<string>,
+  custom: EditorConfig["custom"] = {},
+  target?: ConfigTarget,
+): string {
+  let path: string;
+  if (target?.projectDir) {
+    const projectPath = projectConfigPath(target.projectDir);
+    path = projectPath ?? globalConfigPath(target.home);
+  } else {
+    path = globalConfigPath(target?.home);
+  }
+  writeConfigFile(path, enabled, custom);
+  return path;
+}
+
+function parseConfigFile(path: string): EditorConfig {
   const enabled: string[] = [];
   const custom: EditorConfig["custom"] = {};
 
@@ -82,14 +142,12 @@ export function loadEditorConfig(home?: string): EditorConfig {
   return { enabled, custom };
 }
 
-export function saveEditorConfig(
+function writeConfigFile(
+  path: string,
   enabled: Iterable<string>,
-  custom: EditorConfig["custom"] = {},
-  home?: string,
-): string {
-  const homeDir = agentflowHome(home);
-  mkdirSync(homeDir, { recursive: true });
-  const path = configPath(home);
+  custom: EditorConfig["custom"],
+): void {
+  mkdirSync(dirname(path), { recursive: true });
 
   const lines = ["enabled:"];
   for (const name of enabled) {
@@ -105,7 +163,6 @@ export function saveEditorConfig(
   }
 
   writeFileSync(path, `${lines.join("\n")}\n`, "utf8");
-  return path;
 }
 
 function builtinEditors(): Record<string, EditorSpec> {
@@ -138,8 +195,8 @@ export function normalizeEditorNames(names: Iterable<string>): string[] {
   return normalized;
 }
 
-export function allEditors(home?: string): Record<string, EditorSpec> {
-  const config = loadEditorConfig(home);
+export function allEditors(target?: ConfigTarget): Record<string, EditorSpec> {
+  const config = loadEditorConfig(target);
   const catalog = builtinEditors();
   for (const [name, spec] of Object.entries(config.custom)) {
     catalog[name] = {
@@ -152,9 +209,9 @@ export function allEditors(home?: string): Record<string, EditorSpec> {
   return catalog;
 }
 
-export function getEnabledEditors(home?: string): EditorSpec[] {
-  const config = loadEditorConfig(home);
-  const catalog = allEditors(home);
+export function getEnabledEditors(target?: ConfigTarget): EditorSpec[] {
+  const config = loadEditorConfig(target);
+  const catalog = allEditors(target);
   const enabled: EditorSpec[] = [];
   const seen = new Set<string>();
   for (const name of config.enabled) {
@@ -166,26 +223,26 @@ export function getEnabledEditors(home?: string): EditorSpec[] {
   return enabled;
 }
 
-export function enableEditor(name: string, home?: string): EditorSpec {
-  const catalog = allEditors(home);
+export function enableEditor(name: string, target?: ConfigTarget): EditorSpec {
+  const catalog = allEditors(target);
   if (!(name in catalog)) {
     throw new Error(
       `Unknown editor: ${name}. Use 'flow editors add-custom' first.`,
     );
   }
-  const config = loadEditorConfig(home);
+  const config = loadEditorConfig(target);
   if (!config.enabled.includes(name)) {
     config.enabled.push(name);
-    saveEditorConfig(config.enabled, config.custom, home);
+    saveEditorConfig(config.enabled, config.custom, target);
   }
   return catalog[name];
 }
 
-export function disableEditor(name: string, home?: string): void {
-  const config = loadEditorConfig(home);
+export function disableEditor(name: string, target?: ConfigTarget): void {
+  const config = loadEditorConfig(target);
   if (config.enabled.includes(name)) {
     config.enabled = config.enabled.filter((item) => item !== name);
-    saveEditorConfig(config.enabled, config.custom, home);
+    saveEditorConfig(config.enabled, config.custom, target);
   }
 }
 
@@ -221,11 +278,11 @@ export function addCustomEditor(
   name: string,
   entrypoint: string,
   display?: string,
-  home?: string,
+  target?: ConfigTarget,
 ): EditorSpec {
   if (!name.trim()) throw new Error("Editor name is required");
   const cleanedEntrypoint = validateRelativeEntrypoint(entrypoint);
-  const config = loadEditorConfig(home);
+  const config = loadEditorConfig(target);
   config.custom[name] = {
     display: display || name[0]?.toUpperCase() + name.slice(1),
     path: cleanedEntrypoint,
@@ -233,7 +290,7 @@ export function addCustomEditor(
   if (!config.enabled.includes(name)) {
     config.enabled.push(name);
   }
-  saveEditorConfig(config.enabled, config.custom, home);
+  saveEditorConfig(config.enabled, config.custom, target);
   return {
     name,
     display: display || name[0]?.toUpperCase() + name.slice(1),
@@ -242,9 +299,9 @@ export function addCustomEditor(
   };
 }
 
-export function removeCustomEditor(name: string, home?: string): void {
-  const config = loadEditorConfig(home);
+export function removeCustomEditor(name: string, target?: ConfigTarget): void {
+  const config = loadEditorConfig(target);
   delete config.custom[name];
   config.enabled = config.enabled.filter((item) => item !== name);
-  saveEditorConfig(config.enabled, config.custom, home);
+  saveEditorConfig(config.enabled, config.custom, target);
 }

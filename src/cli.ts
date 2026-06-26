@@ -15,7 +15,13 @@ import {
   removeCustomEditor,
 } from "./editors/index.js";
 import { pickEditors } from "./init-ui.js";
-import { AGENT_INSTRUCTIONS, kickoffPrompt } from "./templates.js";
+import {
+  AGENT_INSTRUCTIONS,
+  BUILTIN_EDITOR_IDS,
+  DEFAULT_PLATFORMS,
+  kickoffPrompt,
+  PLATFORM_DISPLAY,
+} from "./templates.js";
 import { VERSION } from "./version.js";
 
 const program = new Command();
@@ -35,7 +41,10 @@ program
 program
   .command("init")
   .description("Create .agentflow specification skeleton.")
-  .argument("[editors...]", "Editors to enable, e.g. flow init cursor claude")
+  .argument(
+    "[editors...]",
+    `Editors to enable (${BUILTIN_EDITOR_IDS}). Examples: flow init claude | flow init cursor codex`,
+  )
   .option("--force", "Overwrite existing files.")
   .option(
     "--editors <names>",
@@ -87,10 +96,10 @@ program
         `Removed disabled editor entrypoints: ${result.editorsRemoved.join(", ")}`,
       );
     }
-    printNextSteps();
+    printNextSteps(editorList);
   });
 
-function printNextSteps(): void {
+function printNextSteps(editorList: string[]): void {
   console.log();
   console.log("下一步:");
   console.log(
@@ -99,6 +108,17 @@ function printNextSteps(): void {
   console.log(
     "  2. 填完后运行 `flow check` 校验骨架与薄入口是否齐全、是否漂移。",
   );
+  console.log(
+    "  3. 运行 `flow instructions` 查看已启用工具的触发话术（复制粘贴到对话框）。",
+  );
+  if (editorList.length === 0) {
+    console.log();
+    console.log("按需添加薄入口（任选一个或多个，不必只用 cursor）：");
+    for (const name of DEFAULT_PLATFORMS) {
+      console.log(`  flow init ${name.padEnd(12)}  ${PLATFORM_DISPLAY[name]}`);
+    }
+    console.log("  flow init cursor claude codex   # 多平台一次配置");
+  }
 }
 
 function runCheck(label: "check" | "doctor"): void {
@@ -185,7 +205,7 @@ program
       return;
     }
     console.log(AGENT_INSTRUCTIONS);
-    const enabled = getEnabledEditors();
+    const enabled = getEnabledEditors({ projectDir: cwd });
     const prompts = enabled
       .map((spec) => {
         const text = kickoffPrompt(spec.name);
@@ -230,8 +250,11 @@ editors
   .command("list")
   .description("Show editors and their enabled state.")
   .action(() => {
-    const catalog = allEditors();
-    const enabled = new Set(getEnabledEditors().map((s) => s.name));
+    const cwd = resolve(process.cwd());
+    const catalog = allEditors({ projectDir: cwd });
+    const enabled = new Set(
+      getEnabledEditors({ projectDir: cwd }).map((s) => s.name),
+    );
     for (const name of Object.keys(catalog).sort()) {
       const spec = catalog[name];
       const mark = enabled.has(name) ? "[x]" : "[ ]";
@@ -242,19 +265,21 @@ editors
 
 editors
   .command("add <name>")
-  .description("Enable a known editor.")
+  .description("Enable a known editor for this project.")
   .action((name: string) => {
-    const spec = enableEditor(name);
-    applyEditors(process.cwd());
+    const cwd = resolve(process.cwd());
+    const spec = enableEditor(name, { projectDir: cwd });
+    applyEditors(cwd, { projectDir: cwd });
     console.log(`Enabled editor: ${spec.name} -> ${spec.entrypoint}`);
   });
 
 editors
   .command("remove <name>")
-  .description("Disable an editor.")
+  .description("Disable an editor for this project.")
   .action((name: string) => {
-    disableEditor(name);
-    const result = applyEditors(process.cwd());
+    const cwd = resolve(process.cwd());
+    disableEditor(name, { projectDir: cwd });
+    const result = applyEditors(cwd, { projectDir: cwd });
     console.log(`Disabled editor: ${name}`);
     if (result.removed.length) {
       console.log(`Removed entrypoints: ${result.removed.join(", ")}`);
@@ -263,12 +288,15 @@ editors
 
 editors
   .command("add-custom <name> <path>")
-  .description("Register a custom editor entrypoint path.")
+  .description("Register a custom editor entrypoint path for this project.")
   .option("--display <label>", "Display name")
   .action((name: string, entryPath: string, options) => {
+    const cwd = resolve(process.cwd());
     try {
-      const spec = addCustomEditor(name, entryPath, options.display);
-      applyEditors(process.cwd());
+      const spec = addCustomEditor(name, entryPath, options.display, {
+        projectDir: cwd,
+      });
+      applyEditors(cwd, { projectDir: cwd });
       console.log(`Added custom editor: ${spec.name} -> ${spec.entrypoint}`);
     } catch (err) {
       console.error(err instanceof Error ? err.message : String(err));
@@ -278,10 +306,11 @@ editors
 
 editors
   .command("remove-custom <name>")
-  .description("Remove a custom editor.")
+  .description("Remove a custom editor from this project.")
   .action((name: string) => {
-    removeCustomEditor(name);
-    const result = applyEditors(process.cwd());
+    const cwd = resolve(process.cwd());
+    removeCustomEditor(name, { projectDir: cwd });
+    const result = applyEditors(cwd, { projectDir: cwd });
     console.log(`Removed custom editor: ${name}`);
     if (result.removed.length) {
       console.log(`Removed entrypoints: ${result.removed.join(", ")}`);
@@ -293,7 +322,8 @@ editors
   .description("Reconcile editor entrypoints with the config.")
   .option("--force", "Overwrite existing entrypoints")
   .action((options) => {
-    const result = applyEditors(process.cwd(), undefined, options.force);
+    const cwd = resolve(process.cwd());
+    const result = applyEditors(cwd, { projectDir: cwd }, options.force);
     console.log(`Created:  ${result.created.length}`);
     console.log(`Kept:     ${result.kept.length}`);
     console.log(`Removed:  ${result.removed.length}`);

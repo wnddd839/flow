@@ -99,6 +99,33 @@ describe("cli", () => {
     );
   });
 
+  it("init claude creates CLAUDE.md entrypoint", () => {
+    const dir = tempDir();
+    const result = runCli(dir, ["init", "claude"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Editors: claude");
+    expect(existsSync(join(dir, "CLAUDE.md"))).toBe(true);
+  });
+
+  it("init codex claude creates both entrypoints", () => {
+    const dir = tempDir();
+    const result = runCli(dir, ["init", "codex", "claude"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Editors: codex, claude");
+    expect(existsSync(join(dir, "AGENTS.md"))).toBe(true);
+    expect(existsSync(join(dir, "CLAUDE.md"))).toBe(true);
+  });
+
+  it("init --skeleton-only lists all editor quick commands", () => {
+    const dir = tempDir();
+    const result = runCli(dir, ["init", "--skeleton-only"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("flow init codex");
+    expect(result.stdout).toContain("flow init claude");
+    expect(result.stdout).toContain("flow init cursor");
+    expect(result.stdout).toContain("flow init antigravity");
+  });
+
   it("init codex writes a root AGENTS.md pointer", () => {
     const dir = tempDir();
     const result = runCli(dir, ["init", "codex"]);
@@ -160,6 +187,36 @@ describe("cli", () => {
     const result = runCli(dir, ["instructions"]);
     expect(result.code).toBe(1);
     expect(result.stdout.toLowerCase()).toContain("not initialized");
+  });
+
+  it("instructions prints per-tool kickoff prompts after init", () => {
+    const dir = tempDir();
+    runCli(dir, ["init", "cursor"]);
+    const result = runCli(dir, ["instructions"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("触发话术");
+    expect(result.stdout).toContain("— Cursor —");
+    expect(result.stdout).toContain(".agentflow/AGENTS.md");
+  });
+
+  it("init writes project-level editors.yaml, not global", () => {
+    const dir = tempDir();
+    runCli(dir, ["init", "cursor"]);
+    // Project-level config lives inside the project...
+    expect(existsSync(join(dir, ".agentflow", "editors.yaml"))).toBe(true);
+    // ...and the global home (AGENTFLOW_HOME -> dir/.af-home) stays clean.
+    const globalHome = join(dir, ".af-home");
+    expect(existsSync(join(globalHome, "editors.yaml"))).toBe(false);
+  });
+
+  it("check reports unfilled sections right after init", () => {
+    const dir = tempDir();
+    runCli(dir, ["init", "--skeleton-only"]);
+    const result = runCli(dir, ["check"]);
+    // ok is true (files exist), but unfilled must be surfaced.
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("skeleton not yet filled");
+    expect(result.stdout).toContain("project.md");
   });
 });
 
