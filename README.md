@@ -59,7 +59,7 @@ Agent 编排器 · hook 插件 · 文档代写器
 
 **怎么用**
 
-`flow` → ↑↓ 选 init → 勾选编辑器 → 打开 `prompts.md` 复制话术 → AI 填骨架
+`flow` → ↑↓ 选 init → 勾选编辑器 → 打开 `.agentflow/prompts.md` 复制话术 → AI 填 `docs/` 骨架
 
 </td>
 </tr>
@@ -72,7 +72,7 @@ Agent 编排器 · hook 插件 · 文档代写器
 <table>
 <tr>
 <td align="center" width="33%"><b>① init 铺地基</b><br><sub>工作台或 <code>flow init</code>，↑↓ 选编辑器</sub></td>
-<td align="center" width="33%"><b>② AI 读规范填骨架</b><br><sub>复制 <code>prompts.md</code> 话术到对话框</sub></td>
+<td align="center" width="33%"><b>② AI 读规范填骨架</b><br><sub>复制 <code>prompts.md</code> 话术，填 <code>docs/</code> 骨架</sub></td>
 <td align="center" width="33%"><b>③ 日常协作 + check</b><br><sub><code>flow check</code> 确认文件齐全</sub></td>
 </tr>
 </table>
@@ -265,7 +265,7 @@ flow init --force claude         # 覆盖已有 Flow 生成文件
 
 只为你勾选的平台创建文件，不会默认堆满六个工具目录。
 
-每个薄入口只有一行指向 `.agentflow/AGENTS.md`，规范正文只维护一处。
+每个薄入口只有一行指向 `.agentflow/AGENTS.md`，规范正文在 `docs/` 与 AGENTS.md 中维护。
 
 </td>
 </tr>
@@ -327,7 +327,7 @@ flow init --force claude         # 覆盖已有 Flow 生成文件
 </tr>
 <tr>
 <td><code>flow check</code></td>
-<td>检查骨架、薄入口漂移、未填写章节</td>
+<td>检查骨架、薄入口漂移、未填写章节；兼容旧版平铺路径</td>
 </tr>
 <tr>
 <td><code>flow editors list</code></td>

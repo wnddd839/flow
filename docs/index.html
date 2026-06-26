@@ -819,7 +819,7 @@
           <article class="workbench-copy">
             <div class="icon icon-blue">★</div>
             <h3>交互工作台</h3>
-            <p>在终端里直接运行 <code style="font-family:var(--mono);font-size:0.88em;background:#f0efec;padding:0.12em 0.4em;border-radius:4px">flow</code>，一屏看清项目状态，↑↓ 选择就能 init / check / instructions。</p>
+            <p>在终端里直接运行 <code style="font-family:var(--mono);font-size:0.88em;background:#f0efec;padding:0.12em 0.4em;border-radius:4px">flow</code>，一屏看清项目状态，↑↓ 选择就能 init / check / prompts。</p>
             <ul class="workbench-bullets">
               <li>System Status 实时显示阶段、健康、已启用编辑器</li>
               <li>Quick Wizard 数字快捷键 + ↑↓ 菜单双模式</li>
@@ -844,15 +844,15 @@
               <span class="wb-dim">╭─ System Status ────────╮  ╭─ Quick Wizard ──╮</span><br>
               <span class="wb-dim">│</span> <span class="wb-dim">Phase</span>  <span class="wb-red">not initialized</span>  <span class="wb-dim">│  │</span> <span class="wb-cyan">1</span> Setup / init   <span class="wb-dim">│</span><br>
               <span class="wb-dim">│</span> <span class="wb-dim">Doctor</span> <span class="wb-dim">—</span>              <span class="wb-dim">│  │</span> <span class="wb-dim">2</span> Doctor         <span class="wb-dim">│</span><br>
-              <span class="wb-dim">│</span> <span class="wb-dim">Editors</span> <span class="wb-dim">none</span>           <span class="wb-dim">│  │</span> <span class="wb-dim">3</span> Instructions   <span class="wb-dim">│</span><br>
+              <span class="wb-dim">│</span> <span class="wb-dim">Editors</span> <span class="wb-dim">none</span>           <span class="wb-dim">│  │</span> <span class="wb-dim">3</span> Prompts        <span class="wb-dim">│</span><br>
               <span class="wb-dim">╰────────────────────────╯  ╰─────────────────╯</span><br>
               <br>
               <span class="wb-dim">Quick Commands:</span>
-              <span class="wb-pill">/init</span><span class="wb-pill">/check</span><span class="wb-pill">/instructions</span><br>
+              <span class="wb-pill">/init</span><span class="wb-pill">/check</span><span class="wb-pill">/prompts</span><br>
               <br>
               <span class="wb-green">●</span> Setup / init — 选择编辑器并初始化 <span class="wb-dim">‹推荐›</span><br>
               <span class="wb-dim">○</span> Check — 健康检查<br>
-              <span class="wb-dim">○</span> Instructions — 触发话术
+              <span class="wb-dim">○</span> Prompts — 触发话术
             </div>
           </div>
         </div>
@@ -860,7 +860,7 @@
           <article class="card">
             <div class="icon icon-green">01</div>
             <h3>边界分明的骨架</h3>
-            <p>project / conventions / business / pitfalls 各司其职，顶部「只写 / 不写」声明防止信息堆成一个大 README。</p>
+            <p>规范骨架位于 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/docs/</code>：project / conventions / business / pitfalls 各司其职，顶部「只写 / 不写」声明防止信息堆成一个大 README。</p>
           </article>
           <article class="card">
             <div class="icon icon-blue">02</div>
@@ -890,7 +890,7 @@
           <article class="card">
             <div class="icon icon-red">05</div>
             <h3>check 验存在与漂移</h3>
-            <p><code style="font-family:var(--mono);font-size:0.85em">flow check</code> 确认骨架与已启用入口齐全，并检测薄入口是否仍指向 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/AGENTS.md</code>，提示未填写章节。</p>
+            <p><code style="font-family:var(--mono);font-size:0.85em">flow check</code> 确认骨架与已启用入口齐全，检测薄入口漂移与未填章节；仍兼容旧版平铺路径并提示迁入 <code style="font-family:var(--mono);font-size:0.85em">docs/</code>。</p>
           </article>
           <article class="card">
             <div class="icon icon-blue">06</div>
@@ -916,7 +916,7 @@
           <div class="step">
             <div class="step-num">STEP 02</div>
             <h3>AI 读规范填骨架</h3>
-            <p>各工具读到薄入口 → AGENTS.md → 分析代码库，填写 project 等章节。</p>
+            <p>各工具读到薄入口 → AGENTS.md → 分析代码库，填写 <code style="font-family:var(--mono);font-size:0.85em">docs/</code> 下 project 等章节；或复制 <code style="font-family:var(--mono);font-size:0.85em">prompts.md</code> 话术触发。</p>
           </div>
           <div class="step">
             <div class="step-num">STEP 03</div>
@@ -963,13 +963,14 @@
           <h2>快速开始</h2>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>flow init                         # ↑↓ 分步选择编辑器
+          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>flow                              # 进入交互工作台（推荐）
+flow init                         # ↑↓ 分步选择编辑器
 flow init claude                  # 或直接指定平台
 flow init cursor claude           # 多平台
 
 flow init --skeleton-only         # 仅 .agentflow/
 flow check                        # 存在性 + 漂移 + 骨架是否已填
-flow instructions                 # 各工具触发话术</code></pre>
+flow prompts                      # 可复制触发话术（prompts.md）</code></pre>
         </div>
       </div>
     </section>
@@ -981,7 +982,7 @@ flow instructions                 # 各工具触发话术</code></pre>
           <h2>命令参考</h2>
         </div>
         <div class="commands">
-          <div class="cmd-row"><code>flow</code><span>终端 ↑↓ 快捷菜单：init / check / instructions / help</span></div>
+          <div class="cmd-row"><code>flow</code><span>进入交互工作台（仪表盘 + ↑↓ 菜单：init / check / prompts）</span></div>
           <div class="cmd-row"><code>flow init</code><span>无参数时在终端 ↑↓ 分步选择；空格多选、回车确认</span></div>
           <div class="cmd-row"><code>flow init [编辑器...]</code><span>codex / claude / cursor / kiro / qoder / antigravity，可组合</span></div>
           <div class="cmd-row"><code>flow init claude</code><span>骨架 + Claude Code 薄入口（CLAUDE.md）</span></div>
@@ -1054,7 +1055,7 @@ flow instructions                 # 各工具触发话术</code></pre>
       { t: "dim", s: "" },
       { t: "dim", s: " ◆ 选择操作  ↑↓ 选择 · 回车确认" },
       { t: "ok", s: " ● Setup / init — 初始化  ‹推荐›" },
-      { t: "dim", s: " ○ Check   ○ Instructions   ○ Tools" },
+      { t: "dim", s: " ○ Check   ○ Prompts   ○ Tools" },
       { t: "ok", s: " ✓ 已生成 .agentflow/ 骨架" },
     ];
 
