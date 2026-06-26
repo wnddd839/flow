@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
+import * as clack from "@clack/prompts";
 import { Command } from "commander";
 import { doctorProject } from "./core/check.js";
 import { initProject } from "./core/init.js";
@@ -14,7 +15,12 @@ import {
   normalizeEditorNames,
   removeCustomEditor,
 } from "./editors/index.js";
-import { pickEditors } from "./init-ui.js";
+import {
+  canRunInteractivePicker,
+  interactivePickerHint,
+  PickCancelledError,
+  pickEditors,
+} from "./init-ui.js";
 import {
   AGENT_INSTRUCTIONS,
   BUILTIN_EDITOR_IDS,
@@ -32,10 +38,50 @@ program
     "Initialize strict project specification docs for AI coding tools.",
   )
   .version(VERSION, "-V, --version", "Show version")
-  .action(() => {
+  .action(async () => {
+    if (canRunInteractivePicker()) {
+      const action = await clack.select({
+        message: "Flow",
+        options: [
+          {
+            value: "init",
+            label: "init — 初始化规范骨架",
+            hint: "↑↓ 选择编辑器",
+          },
+          {
+            value: "check",
+            label: "check — 检查骨架与薄入口",
+          },
+          {
+            value: "instructions",
+            label: "instructions — 查看触发话术",
+          },
+          {
+            value: "help",
+            label: "help — 查看完整帮助",
+          },
+        ],
+      });
+      if (clack.isCancel(action)) {
+        clack.cancel("已退出");
+        return;
+      }
+      if (action === "init") {
+        await program.parseAsync(["node", "flow", "init"]);
+        return;
+      }
+      if (action === "check") {
+        runCheck("check");
+        return;
+      }
+      if (action === "instructions") {
+        await program.parseAsync(["node", "flow", "instructions"]);
+        return;
+      }
+    }
     program.outputHelp();
     console.log();
-    console.log("先来一发：`flow init`（TTY 下可交互勾选编辑器）。");
+    console.log("先来一发：`flow init`（终端里 ↑↓ 选择编辑器，空格勾选）。");
   });
 
 program
@@ -54,9 +100,13 @@ program
     "--skeleton-only",
     "Only create .agentflow/; do not generate any thin entrypoints.",
   )
+  .option(
+    "-i, --interactive",
+    "Force interactive editor picker (requires a TTY terminal).",
+  )
   .action(async (positional: string[], options) => {
     const cwd = resolve(process.cwd());
-    let editorList: string[];
+    let editorList: string[] | null = null;
 
     try {
       if (options.skeletonOnly) {
@@ -71,9 +121,31 @@ program
             .filter(Boolean),
         );
       } else {
-        editorList = await pickEditors();
+        editorList = await pickEditors({
+          forceInteractive: Boolean(options.interactive),
+        });
+        if (editorList === null) {
+          console.error(
+            "无法启动交互式选择器（当前不是交互终端，或 stdin/stdout 未连接 TTY）。",
+          );
+          console.error(`  诊断: ${interactivePickerHint()}`);
+          console.error();
+          console.error("请任选一种方式：");
+          console.error("  flow init cursor          # 直接指定编辑器");
+          console.error("  flow init cursor claude   # 多个编辑器");
+          console.error("  flow init --skeleton-only # 仅骨架");
+          console.error();
+          console.error(
+            "提示：在 Windows Terminal / Cursor 终端里直接运行 `flow init` 可 ↑↓ 选择。",
+          );
+          process.exitCode = 1;
+          return;
+        }
       }
     } catch (err) {
+      if (err instanceof PickCancelledError) {
+        return;
+      }
       console.error(err instanceof Error ? err.message : String(err));
       process.exitCode = 1;
       return;

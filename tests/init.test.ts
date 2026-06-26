@@ -74,8 +74,8 @@ describe("initProject", () => {
     );
   });
 
-  it("pickEditors returns empty when not TTY", async () => {
-    await expect(pickEditors({ isTty: false })).resolves.toEqual([]);
+  it("pickEditors returns null when not TTY", async () => {
+    await expect(pickEditors({ isTty: false })).resolves.toBeNull();
   });
 
   it("init is idempotent without force", () => {

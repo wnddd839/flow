@@ -23,7 +23,11 @@ function runCli(
     const stdout = execFileSync(process.execPath, [CLI, ...args], {
       cwd,
       encoding: "utf8",
-      env: { ...process.env, AGENTFLOW_HOME: join(cwd, ".af-home") },
+      env: {
+        ...process.env,
+        AGENTFLOW_HOME: join(cwd, ".af-home"),
+        FLOW_NON_INTERACTIVE: "1",
+      },
     });
     return { code: 0, stdout, stderr: "" };
   } catch (err: unknown) {
@@ -114,6 +118,16 @@ describe("cli", () => {
     expect(result.stdout).toContain("Editors: codex, claude");
     expect(existsSync(join(dir, "AGENTS.md"))).toBe(true);
     expect(existsSync(join(dir, "CLAUDE.md"))).toBe(true);
+  });
+
+  it("init without editors in non-TTY fails with guidance", () => {
+    const dir = tempDir();
+    const result = runCli(dir, ["init"]);
+    expect(result.code).toBe(1);
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      "无法启动交互式选择器",
+    );
+    expect(`${result.stdout}${result.stderr}`).toContain("flow init cursor");
   });
 
   it("init --skeleton-only lists all editor quick commands", () => {
