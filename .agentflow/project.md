@@ -31,7 +31,7 @@
 | 运行时依赖 | `commander`（CLI）、`@clack/prompts`（交互多选） |
 | 开发依赖 | `vitest`、`tsup`、`typescript`、`@biomejs/biome` |
 | 打包 | `tsup` 单文件 ESM → `dist/cli.js`，`bin.flow` 指向该入口 |
-| 当前版本 | `0.6.0`（见 `src/version.ts` 与 `package.json`） |
+| 当前版本 | `0.6.1`（见 `src/version.ts` 与 `package.json`） |
 | 分发 | npm：`@wnddd8339/flow`（`npx @wnddd8339/flow`） |
 | 网络 | 无 API 调用、无网络依赖 |
 
