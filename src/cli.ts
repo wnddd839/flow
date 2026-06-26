@@ -15,7 +15,7 @@ import {
   removeCustomEditor,
 } from "./editors/index.js";
 import { pickEditors } from "./init-ui.js";
-import { AGENT_INSTRUCTIONS } from "./templates.js";
+import { AGENT_INSTRUCTIONS, kickoffPrompt } from "./templates.js";
 import { VERSION } from "./version.js";
 
 const program = new Command();
@@ -123,6 +123,17 @@ function runCheck(label: "check" | "doctor"): void {
     }
     process.exitCode = 1;
   }
+  if (report.unfilled.length) {
+    console.log(
+      `AgentFlow ${label}: skeleton not yet filled by an AI — sections still empty:`,
+    );
+    for (const entry of report.unfilled) {
+      console.log(`- ${entry}`);
+    }
+    console.log(
+      "  让接手的 AI 读 .agentflow/AGENTS.md，按边界声明分析代码后填写，或运行 `flow instructions` 查看触发话术。",
+    );
+  }
   printDiagnostics(cwd);
 }
 
@@ -144,6 +155,9 @@ function printDiagnostics(cwd: string): void {
       );
     }
   }
+  for (const entry of report.unfilled) {
+    console.log(`- [unfilled] AgentFlow ${entry}`);
+  }
   for (const tool of detectTools()) {
     const message = tool.path || "not found on PATH";
     console.log(`- [${tool.status}] ${tool.display}: ${message}`);
@@ -162,7 +176,7 @@ program
 
 program
   .command("instructions")
-  .description("Show agent instructions summary.")
+  .description("Show agent instructions and per-tool kickoff prompts.")
   .action(() => {
     const cwd = resolve(process.cwd());
     if (!existsSync(join(cwd, ".agentflow", "AGENTS.md"))) {
@@ -171,6 +185,22 @@ program
       return;
     }
     console.log(AGENT_INSTRUCTIONS);
+    const enabled = getEnabledEditors();
+    const prompts = enabled
+      .map((spec) => {
+        const text = kickoffPrompt(spec.name);
+        return text ? { display: spec.display, text } : null;
+      })
+      .filter((p) => p !== null);
+    if (prompts.length) {
+      console.log();
+      console.log("首次接手触发话术（复制粘贴到对应工具的对话框）：");
+      for (const { display, text } of prompts) {
+        console.log();
+        console.log(`— ${display} —`);
+        console.log(text);
+      }
+    }
   });
 
 program

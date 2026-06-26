@@ -5,6 +5,7 @@ import {
   agentsMd,
   businessSkeleton,
   conventionsSkeleton,
+  kickoffPrompt,
   pitfallsSkeleton,
   projectSkeleton,
   rootAgentsPointer,
@@ -79,5 +80,26 @@ describe("templates", () => {
     const content = thinEntrypoint("cursor");
     expect(content).toContain(".agentflow/AGENTS.md");
     expect(content).not.toContain("constitution");
+  });
+
+  it("kickoff prompts exist for every built-in editor and nudge filling", () => {
+    for (const name of [
+      "codex",
+      "claude",
+      "cursor",
+      "kiro",
+      "qoder",
+      "antigravity",
+    ]) {
+      const prompt = kickoffPrompt(name);
+      expect(prompt).not.toBeNull();
+      expect(prompt).toContain(".agentflow/AGENTS.md");
+      // Every prompt must tell the agent to fill empty sections first.
+      expect(prompt).toMatch(/填|补齐/);
+    }
+  });
+
+  it("kickoff prompt returns null for unknown editor", () => {
+    expect(kickoffPrompt("nope")).toBeNull();
   });
 });

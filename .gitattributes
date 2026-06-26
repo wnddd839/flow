@@ -1,0 +1,4 @@
+# Normalize line endings to LF in the repo and the working tree.
+# biome requires LF; without this, core.autocrlf=true on Windows keeps
+# flipping files to CRLF and breaking `npm run lint`.
+* text=auto eol=lf

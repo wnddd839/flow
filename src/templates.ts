@@ -281,6 +281,32 @@ export const AGENT_INSTRUCTIONS = dedent(`
   - 以代码为准：文档与代码冲突时改文档。
 `);
 
+/**
+ * Copy-paste prompts that tell each AI tool to read AGENTS.md, fill any empty
+ * skeleton sections by analyzing the code, and only then start the user's task.
+ *
+ * Different tools have different auto-activation reliability: Codex reads
+ * AGENTS.md eagerly, but Claude/Cursor often need an explicit nudge. These
+ * prompts are that nudge — one per enabled editor, ready to paste.
+ */
+const KICKOFF_PROMPTS: Record<string, string> = {
+  codex:
+    "先读 .agentflow/AGENTS.md 与其索引的文档。若 project.md 等仍有未填章节，先分析代码库按各文件边界声明填好，再开始我的任务。",
+  claude:
+    "请先读 .agentflow/AGENTS.md 和它索引的规范文档。如果 project.md、conventions.md、business.md、pitfalls.md 里还有空章节，先分析代码把它们填好（遵守每个文件顶部的边界声明），然后再处理我的请求。",
+  cursor:
+    "先读 .agentflow/AGENTS.md 及其索引文档。把 project.md / conventions.md / business.md / pitfalls.md 里仍是占位注释的章节，按各文件边界声明分析代码后填实，再开始我要做的事。",
+  kiro: "先读 .agentflow/AGENTS.md 及其索引文档，把未填的骨架章节按边界声明补齐，再开始我的任务。",
+  qoder:
+    "先读 .agentflow/AGENTS.md 及其索引文档，把未填的骨架章节按边界声明补齐，再开始我的任务。",
+  antigravity:
+    "先读 .agentflow/AGENTS.md 及其索引文档，把未填的骨架章节按边界声明补齐，再开始我的任务。",
+};
+
+export function kickoffPrompt(name: string): string | null {
+  return KICKOFF_PROMPTS[name] ?? null;
+}
+
 export const SKELETON_FILES: Record<string, () => string> = {
   ".agentflow/AGENTS.md": agentsMd,
   ".agentflow/project.md": projectSkeleton,
