@@ -28,10 +28,10 @@
 | 项 | 版本 / 说明 |
 |----|------------|
 | 语言 | TypeScript（Node.js ≥ 18） |
-| 运行时依赖 | `commander`（CLI）、`@clack/prompts`（交互多选） |
+| 运行时依赖 | `commander`（CLI）、`@clack/prompts` 1.6（交互 ↑↓ 选择） |
 | 开发依赖 | `vitest`、`tsup`、`typescript`、`@biomejs/biome` |
 | 打包 | `tsup` 单文件 ESM → `dist/cli.js`，`bin.flow` 指向该入口 |
-| 当前版本 | `0.6.1`（见 `src/version.ts` 与 `package.json`） |
+| 当前版本 | `0.6.2`（见 `src/version.ts` 与 `package.json`） |
 | 分发 | npm：`@wnddd8339/flow`（`npx @wnddd8339/flow`） |
 | 网络 | 无 API 调用、无网络依赖 |
 
@@ -42,8 +42,9 @@ src/
   cli.ts              命令行入口（init / check / editors / tools / instructions）
   core/               initProject、doctorProject、writeText
   templates.ts        规范文档与薄入口的字符串模板（只产字符串，不写盘）
-  editors/            编辑器配置（~/.agentflow/editors.yaml）、校验与 reconcile
-  init-ui.ts          flow init 的编辑器多选（@clack/prompts）
+  editors/            编辑器配置（项目级 `.agentflow/editors.yaml`）、校验与 reconcile
+  init-ui.ts          flow init 分步向导（@clack/prompts multiselect）
+  terminal.ts         TTY 检测、Windows CONIN$ 回退
   diagnostics/tools.ts 本地 AI CLI 检测
   util/dedent.ts      模板缩进处理
 tests/                vitest 单元与 CLI 集成测试
@@ -52,13 +53,13 @@ archive/python/       v0.5 及更早 Python 实现（已归档，不参与 CI）
 
 **数据流（`flow init`）：**
 
-1. `init-ui.pickEditors`（仅 TTY）或命令行参数决定本次启用哪些平台；默认空（仅骨架）。
+1. `init-ui.pickEditors`（终端交互）或命令行参数决定本次启用哪些平台；无参数且非交互环境会报错并提示显式指定。
 2. `templates.ts` 生成 `.agentflow/` 下 6 个规范文件内容。
-3. `editors/config.ts` 读取/写入用户级 `editors.yaml`，保存启用列表。
+3. `editors/config.ts` 读取/写入**项目级** `.agentflow/editors.yaml`（全局 `~/.agentflow/` 仅作回退读取）。
 4. `editors/apply.ts` 为已启用平台写入薄入口（Codex 为根 `AGENTS.md` 指针，其余为单行指向 `.agentflow/AGENTS.md`），并安全移除已禁用平台的旧入口。
-5. `doctorProject` 校验骨架文件 + 已启用编辑器的入口文件是否齐全，并检测薄入口是否仍指向 `.agentflow/AGENTS.md`。
+5. `doctorProject` 校验骨架文件 + 已启用编辑器的入口文件是否齐全，检测薄入口漂移，并报告骨架章节是否仍未填充（unfilled 不导致 exit 1）。
 
-用户级配置目录：`~/.agentflow/`（可通过环境变量 `AGENTFLOW_HOME` 覆盖）。
+配置目录：项目级 `.agentflow/editors.yaml`；全局 `~/.agentflow/` 可通过 `AGENTFLOW_HOME` 覆盖（仅在没有项目级文件时使用）。
 
 ## 启动与运行
 
@@ -72,11 +73,13 @@ npm run build
 **初始化当前项目规范骨架：**
 
 ```bash
-flow init                      # TTY 下交互勾选编辑器；非 TTY 仅骨架
+flow                           # 终端 ↑↓ 快捷菜单
+flow init                      # ↑↓ 分步选择编辑器；非交互环境需显式指定
 flow init cursor               # 骨架 + Cursor 薄入口
 flow init cursor claude        # 多个平台 positional
 flow init --editors qoder,cursor
 flow init --skeleton-only      # 仅 .agentflow/，不生成薄入口
+flow init -i                   # 强制尝试交互选择器
 flow init --force              # 覆盖已有文件
 ```
 

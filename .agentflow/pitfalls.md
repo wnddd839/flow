@@ -48,11 +48,17 @@
 - 根因：混淆了提示词契约与工具能力。
 - 对策：文档改为「契约靠提示词」；check 只验文件存在性，不验内容。
 
+**Windows CMD 下 `stdin.isTTY` 为 false，交互选择器不启动**
+
+- 现象：`flow init` 在 cmd.exe 里直接报「无法启动交互式选择器」，或旧版静默只生成骨架。
+- 根因：Node 在部分 Windows 终端上报 `isTTY=false`；旧逻辑要求 stdin 与 stdout 同时为 TTY。
+- 对策：`terminal.ts` 放宽检测（Windows 仍尝试交互）；Clack 失败时回退 `CONIN$` 数字菜单；非交互环境显式报错而非静默骨架-only。
+
 ## 不再重蹈的决策
 
 | 曾考虑 | 否决理由 |
 |--------|----------|
-| 在 init 时交互询问业务/内容问题 | 与「用户不填内容、AI 填骨架」原则冲突。init 仅在 TTY 下交互勾选编辑器，绝不问业务；且 positional / `--editors` / `--skeleton-only` 始终可非交互脚本化 |
+| 在 init 时交互询问业务/内容问题 | 与「用户不填内容、AI 填骨架」原则冲突。init 仅在终端里交互勾选编辑器，绝不问业务；且 positional / `--editors` / `--skeleton-only` 始终可非交互脚本化 |
 | 删除整个 `.cursor/` / `.claude/` 目录来清理入口 | 极易误伤用户配置；只删可识别的单文件并向上 prune 空目录，保留顶层工具目录 |
 | 把规范正文复制进每个平台入口 | 薄入口仅指针，避免六处副本漂移；完整规范只在 `.agentflow/` |
 | 在 doctor 中校验 Markdown 内容是否「填完」 | 增加主观判断与误报；doctor 只检查文件存在性 |

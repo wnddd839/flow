@@ -5,7 +5,7 @@
 <h3>轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基</h3>
 
 <p>
-<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.1-346538?style=flat-square" alt="version"></a>
+<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.2-346538?style=flat-square" alt="version"></a>
 <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-18+-1f6c9f?style=flat-square" alt="node"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-787774?style=flat-square" alt="license"></a>
 <a href="https://wnddd839.github.io/flow/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-111111?style=flat-square" alt="docs"></a>
@@ -32,18 +32,32 @@
 |---|---|
 | **是什么** | 规范层的「地基」工具 — 骨架、薄入口、存在性检查 |
 | **不是什么** | Agent 编排器、hook 插件、文档代写器 |
-| **怎么用** | `npx @wnddd8339/flow init <编辑器>` → AI 读 `AGENTS.md` 填骨架 |
+| **怎么用** | `flow init`（终端 ↑↓ 选编辑器）或 `flow init claude` → AI 读 `AGENTS.md` 填骨架 |
 
 ## 快速开始
 
 ```bash
 # 无需全局安装
-npx @wnddd8339/flow init              # 仅骨架；TTY 下可交互勾选编辑器
-npx @wnddd8339/flow init claude       # 骨架 + Claude Code 薄入口
-npx @wnddd8339/flow init cursor claude # 多平台一次配置
+flow init                           # 终端里 ↑↓ 分步选择编辑器（推荐）
+flow init claude                    # 或直接指定平台
+flow init cursor claude             # 多平台一次配置
 
 flow check
-flow instructions                     # 复制各工具的「填骨架」触发话术
+flow instructions                   # 复制各工具的「填骨架」触发话术
+```
+
+**交互式 init**（Windows Terminal / Cursor 终端 / cmd）：
+
+- 运行 `flow` 或 `flow init`，用 **↑↓** 移动、**空格** 多选勾选、**回车** 确认
+- 第一步选：手动选编辑器 / 自动启用 PATH 上的工具 / 仅骨架
+- 第二步：勾选要生成薄入口的平台（PATH 上检测到的会默认勾选）
+- Clack 不可用时（如部分 Windows CMD）会降级为数字菜单（输入 `1,3`）
+
+**非交互环境**（CI、脚本）：必须显式指定编辑器，或 `--skeleton-only`：
+
+```bash
+npx @wnddd8339/flow init claude
+npx @wnddd8339/flow init --skeleton-only
 ```
 
 ## 按编辑器配置
@@ -86,11 +100,13 @@ flow init --force claude            # 覆盖已有 Flow 生成文件
 
 | 命令 | 说明 |
 |------|------|
-| `flow init [编辑器...]` | 生成 `.agentflow/`；可跟 codex/claude/cursor/kiro/qoder/antigravity |
+| `flow` | 终端里 ↑↓ 快捷菜单（init / check / instructions / help） |
+| `flow init [编辑器...]` | 生成 `.agentflow/`；无参数时在终端里交互选择 |
 | `flow init --skeleton-only` | 仅 `.agentflow/`，不生成薄入口 |
-| `flow check` | 检查骨架、薄入口漂移、骨架是否已被 AI 填充 |
+| `flow init -i` | 强制尝试交互选择器 |
+| `flow check` | 检查骨架、薄入口漂移、骨架是否已被 AI 填充（unfilled 提示） |
 | `flow instructions` | 打印工作说明 + 已启用工具的触发话术 |
-| `flow editors list` | 查看/管理本项目启用的编辑器 |
+| `flow editors list` | 查看/管理**本项目**启用的编辑器（`.agentflow/editors.yaml`） |
 | `flow tools` | 检测本机 AI 编码 CLI |
 
 完整介绍见 **[文档站点 →](https://wnddd839.github.io/flow/)**
@@ -112,4 +128,5 @@ npm run check          # lint + typecheck + build + test
 node dist/cli.js --version
 ```
 
-> **v0.6.1 起 CLI 为 TypeScript 实现**（npm 包 [`@wnddd8339/flow`](https://www.npmjs.com/package/@wnddd8339/flow)）。v0.5 及更早的 Python 版已移至 [`archive/python/`](archive/python/)。
+> **v0.6.2** 起 `flow init` 支持 ↑↓ 分步向导（`@clack/prompts` 1.6），并修复 Windows CMD 的 TTY 检测。  
+> **v0.6.1** 起 CLI 为 TypeScript 实现（npm 包 [`@wnddd8339/flow`](https://www.npmjs.com/package/@wnddd8339/flow)）。v0.5 及更早的 Python 版已移至 [`archive/python/`](archive/python/)。

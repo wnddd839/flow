@@ -24,7 +24,7 @@
 | 磁盘写入 / 检查逻辑 | `src/core/` |
 | 纯字符串模板（骨架、薄入口） | `src/templates.ts` |
 | 用户级编辑器配置、名称校验、入口 reconcile | `src/editors/` |
-| `flow init` 编辑器多选 | `src/init-ui.ts` |
+| `flow init` 编辑器多选 | `src/init-ui.ts` + `src/terminal.ts` |
 | 环境探测（PATH 工具） | `src/diagnostics/tools.ts` |
 | Commander 命令注册与分发 | `src/cli.ts` |
 | 版本号 | `src/version.ts` |

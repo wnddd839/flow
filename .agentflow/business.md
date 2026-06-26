@@ -17,14 +17,14 @@
 - **文档边界**：每份 `.md` 顶部的「只写 / 不写」声明定义职责范围，防止所有信息堆进一个 README。
 - **维护契约**：写在 `AGENTS.md` 中的 AI 工作约定——首次接手填骨架、改动后更新文档、信息不重复、以代码为准。靠提示词传达，Flow 工具层不强制执行。
 - **薄入口（thin entrypoint）**：各 AI 工具原生会读取的路径（如 `CLAUDE.md`、`.cursor/rules/agentflow.mdc`）上的极短指针，内容仅指向 `.agentflow/AGENTS.md`。
-- **编辑器 / 平台**：内置六种 AI 编码环境（codex、claude、cursor、kiro、qoder、antigravity）；启用列表保存在用户级 `~/.agentflow/editors.yaml`。可缩减或自定义，但不意味 Flow 绑定某一平台。
-- **Check**：校验规范骨架与已启用平台入口是否齐全；并检测薄入口内容是否仍指向 `.agentflow/AGENTS.md`（漂移）。
+- **编辑器 / 平台**：内置六种 AI 编码环境（codex、claude、cursor、kiro、qoder、antigravity）；启用列表保存在**项目级** `.agentflow/editors.yaml`（无项目级文件时回退读全局 `~/.agentflow/editors.yaml`）。
+- **Check**：校验规范骨架与已启用平台入口是否齐全；检测薄入口漂移；并提示骨架章节是否仍未被 AI 填充（unfilled）。
 
 ## 主要流程
 
 ### 1. 项目首次接入 Flow
 
-1. 开发者在目标仓库执行 `flow init`（交互选择或 `flow init cursor` 等），默认只生成 `.agentflow/`；薄入口按需勾选。
+1. 开发者在目标仓库执行 `flow init`（终端 ↑↓ 分步选择）或 `flow init cursor` 等；薄入口按需勾选。
 2. Flow 写入 `.agentflow/` 规范骨架 + 已启用平台的薄入口。
 3. 开发者用任意 AI 编码工具打开项目；工具读到薄入口 → `.agentflow/AGENTS.md`。
 4. 首个 AI 助手通读规范、分析代码库，填写 `project.md` 等章节。

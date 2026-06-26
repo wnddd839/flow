@@ -629,7 +629,7 @@
       <div class="hero-grid">
         <div class="reveal">
           <div class="badges">
-            <span class="badge badge-green">v0.6.1</span>
+            <span class="badge badge-green">v0.6.2</span>
             <span class="badge badge-blue">离线 CLI</span>
             <span class="badge badge-neutral">Node 18+</span>
             <span class="badge badge-neutral">MIT</span>
@@ -714,7 +714,7 @@
           <div class="step">
             <div class="step-num">STEP 01</div>
             <h3>init 铺地基</h3>
-            <p>交互勾选或命令行指定编辑器，生成 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/</code> 与薄入口指针。</p>
+            <p>终端里 <strong>↑↓</strong> 分步选择编辑器，或命令行指定；生成 <code style="font-family:var(--mono);font-size:0.85em">.agentflow/</code> 与薄入口指针。</p>
           </div>
           <div class="step">
             <div class="step-num">STEP 02</div>
@@ -766,14 +766,13 @@
           <h2>快速开始</h2>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>npx @wnddd8339/flow init claude       # Claude Code
-npx @wnddd8339/flow init cursor       # Cursor
-npx @wnddd8339/flow init codex        # Codex
-npx @wnddd8339/flow init cursor claude # 多平台
+          <pre style="margin:0;padding:1.25rem 1.35rem;background:#fbfbf9;border:none;font-family:var(--mono);font-size:0.84rem;line-height:1.7;overflow-x:auto"><code>flow init                         # ↑↓ 分步选择编辑器
+flow init claude                  # 或直接指定平台
+flow init cursor claude           # 多平台
 
-flow init --skeleton-only             # 仅 .agentflow/
-flow check                            # 存在性 + 漂移 + 骨架是否已填
-flow instructions                     # 各工具触发话术</code></pre>
+flow init --skeleton-only         # 仅 .agentflow/
+flow check                        # 存在性 + 漂移 + 骨架是否已填
+flow instructions                 # 各工具触发话术</code></pre>
         </div>
       </div>
     </section>
@@ -785,11 +784,13 @@ flow instructions                     # 各工具触发话术</code></pre>
           <h2>命令参考</h2>
         </div>
         <div class="commands">
+          <div class="cmd-row"><code>flow</code><span>终端 ↑↓ 快捷菜单：init / check / instructions / help</span></div>
+          <div class="cmd-row"><code>flow init</code><span>无参数时在终端 ↑↓ 分步选择；空格多选、回车确认</span></div>
           <div class="cmd-row"><code>flow init [编辑器...]</code><span>codex / claude / cursor / kiro / qoder / antigravity，可组合</span></div>
           <div class="cmd-row"><code>flow init claude</code><span>骨架 + Claude Code 薄入口（CLAUDE.md）</span></div>
           <div class="cmd-row"><code>flow init cursor</code><span>骨架 + Cursor 薄入口</span></div>
           <div class="cmd-row"><code>flow init --skeleton-only</code><span>仅骨架，不生成薄入口</span></div>
-          <div class="cmd-row"><code>flow check</code><span>检查骨架与已启用入口；检测薄入口是否漂移（doctor 为别名）</span></div>
+          <div class="cmd-row"><code>flow check</code><span>检查骨架与已启用入口；检测漂移与未填章节（doctor 为别名）</span></div>
           <div class="cmd-row"><code>flow editors list</code><span>查看 / 管理启用的编辑器</span></div>
           <div class="cmd-row"><code>flow tools</code><span>检测本机 AI 编码 CLI 是否在 PATH</span></div>
           <div class="cmd-row"><code>flow instructions</code><span>打印 agent 工作说明摘要</span></div>
@@ -827,7 +828,7 @@ flow instructions                     # 各工具触发话术</code></pre>
 
     <footer>
       <div class="container">
-        <span>Flow · MIT License · v0.6.1 · <a href="https://www.npmjs.com/package/@wnddd8339/flow">@wnddd8339/flow</a></span>
+        <span>Flow · MIT License · v0.6.2 · <a href="https://www.npmjs.com/package/@wnddd8339/flow">@wnddd8339/flow</a></span>
         <span>
           <a href="https://github.com/wnddd839/flow">GitHub</a>
           ·
@@ -841,13 +842,14 @@ flow instructions                     # 各工具触发话术</code></pre>
 
   <script>
     const lines = [
-      { t: "prompt", s: "$ flow init cursor" },
-      { t: "dim", s: "Initialized specification skeleton" },
-      { t: "ok", s: "Editors: cursor" },
-      { t: "dim", s: "Created: 7  Skipped: 0" },
+      { t: "prompt", s: "$ flow init" },
+      { t: "dim", s: "◆ 如何初始化？" },
+      { t: "dim", s: "  › 选择编辑器" },
+      { t: "dim", s: "    自动启用 PATH 上的工具" },
+      { t: "dim", s: "    仅生成 .agentflow/ 骨架" },
+      { t: "dim", s: "↑↓ 移动 · 回车确认" },
       { t: "prompt", s: "$ flow check" },
       { t: "ok", s: "AgentFlow check: OK" },
-      { t: "dim", s: ".agentflow/AGENTS.md ready" },
     ];
 
     const term = document.getElementById("terminal-demo");
