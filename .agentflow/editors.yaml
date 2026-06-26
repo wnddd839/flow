@@ -1,0 +1,8 @@
+enabled:
+  - "codex"
+  - "claude"
+  - "cursor"
+  - "kiro"
+  - "qoder"
+  - "antigravity"
+custom:

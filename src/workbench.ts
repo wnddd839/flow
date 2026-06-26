@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as readline from "node:readline/promises";
 import * as clack from "@clack/prompts";
@@ -74,7 +74,7 @@ function renderDashboard(root: string, status: ProjectStatus): string {
   const wizardBody = [
     `${color.brightCyan("1")}  ${color.white("Setup / init 初始化")}`,
     `${color.brightCyan("2")}  ${color.white("Doctor 健康检查")}`,
-    `${color.brightCyan("3")}  ${color.white("Instructions 触发话术")}`,
+    `${color.brightCyan("3")}  ${color.white("Prompts 触发话术")}`,
     `${color.brightCyan("0")}  ${color.gray("Exit 退出")}`,
   ];
 
@@ -107,9 +107,9 @@ function renderDashboard(root: string, status: ProjectStatus): string {
   out.push("");
   out.push(
     `  ${color.dim("Quick Commands:")} ${pills([
-      "/init",
+      "/prompts",
       "/check",
-      "/instructions",
+      "/init",
       "/tools",
       "/editors",
       "/help",
@@ -175,6 +175,16 @@ function actionCheck(root: string): void {
   }
 }
 
+function actionPrompts(root: string): void {
+  console.log();
+  const promptsPath = join(root, ".agentflow", "prompts.md");
+  if (!existsSync(promptsPath)) {
+    console.log(color.brightYellow("尚未生成 prompts.md，请先 init。"));
+    return;
+  }
+  console.log(readFileSync(promptsPath, "utf8"));
+}
+
 function actionInstructions(root: string): void {
   console.log();
   if (!existsSync(join(root, ".agentflow", "AGENTS.md"))) {
@@ -234,7 +244,11 @@ function printHelp(): void {
   const rows: [string, string][] = [
     ["1 / init", "选择编辑器并生成 .agentflow/ 骨架与薄入口"],
     ["2 / check", "检查骨架、薄入口漂移、未填写章节"],
-    ["3 / instructions", "打印工作说明与各工具触发话术"],
+    [
+      "3 / prompts",
+      "打开 .agentflow/prompts.md 可复制话术（首次接手、大更新等）",
+    ],
+    ["instructions", "工作说明摘要（完整话术用 prompts）"],
     ["tools", "检测本机 AI 编码 CLI"],
     ["editors", "查看本项目已启用编辑器"],
     ["help", "显示本帮助"],
@@ -248,6 +262,7 @@ function printHelp(): void {
 type Choice =
   | "init"
   | "check"
+  | "prompts"
   | "instructions"
   | "tools"
   | "editors"
@@ -266,6 +281,8 @@ function normalize(input: string): Choice | null {
     case "doctor":
       return "check";
     case "3":
+    case "prompts":
+      return "prompts";
     case "instructions":
       return "instructions";
     case "tools":
@@ -314,7 +331,7 @@ async function selectChoice(
 }
 
 async function selectChoiceReadline(
-  items: MenuItem[],
+  _items: MenuItem[],
 ): Promise<Choice | typeof CANCEL> {
   const { input, output } = interactiveStreams();
   const rl = readline.createInterface({ input, output });
@@ -374,7 +391,8 @@ export async function runWorkbench(projectDir?: string): Promise<number> {
         hint: status.initialized ? "已初始化，可重选编辑器" : "从这里开始",
       },
       { value: "check", label: "Check — 健康检查" },
-      { value: "instructions", label: "Instructions — 触发话术" },
+      { value: "prompts", label: "Prompts — 触发话术（prompts.md）" },
+      { value: "instructions", label: "Instructions — 工作说明摘要" },
       { value: "tools", label: "Tools — 检测本机 AI CLI" },
       { value: "editors", label: "Editors — 已启用编辑器" },
       { value: "exit", label: "Exit — 退出" },
@@ -399,6 +417,9 @@ export async function runWorkbench(projectDir?: string): Promise<number> {
         break;
       case "check":
         actionCheck(root);
+        break;
+      case "prompts":
+        actionPrompts(root);
         break;
       case "instructions":
         actionInstructions(root);

@@ -4,6 +4,7 @@ import { getEnabledEditors } from "../editors/index.js";
 
 export const BASE_REQUIRED_FILES = [
   ".agentflow/AGENTS.md",
+  ".agentflow/prompts.md",
   ".agentflow/project.md",
   ".agentflow/conventions.md",
   ".agentflow/business.md",

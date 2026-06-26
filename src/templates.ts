@@ -64,6 +64,7 @@ export function agentsMd(): string {
     - [\`business.md\`](business.md) — 业务是什么：领域概念、核心流程、术语表
     - [\`pitfalls.md\`](pitfalls.md) — 踩过的坑：历史教训、不再重蹈的决策
     - [\`skills/README.md\`](skills/README.md) — 专项 skill 路由表
+    - [\`prompts.md\`](prompts.md) — **可复制触发话术**（首次接手、大更新、完成自检等）
 
     ## 工作纪律
 
@@ -244,6 +245,120 @@ export function skillsReadme(): string {
   `);
 }
 
+/** Copy-paste prompts for common AI coding scenarios. Generated ready to use. */
+export function promptsMd(): string {
+  return dedent(`
+    # 触发话术
+
+    ${AGENTFLOW_GENERATED_MARKER}
+
+    打开本文件，找到对应场景，**整段复制**到 Cursor / Claude / Codex 等对话框即可。
+    也可运行 \`flow prompts\` 在终端查看。
+
+    ---
+
+    ## 1. 项目首次接手（填骨架）
+
+    **何时用**：刚 \`flow init\` 完，或 AI 第一次接触本项目、规范文档仍是空章节。
+
+    \`\`\`
+    请先读 .agentflow/AGENTS.md 及其索引的全部规范文档（project / conventions / business / pitfalls）。
+
+    若 project.md 等仍有未填章节，你的第一项任务是：分析本仓库代码，按每个文件顶部的「只写 / 不写」边界声明填写骨架，然后再处理我接下来的请求。
+
+    填写要求：
+    - 以代码为准，不要编造
+    - 每条信息只出现在一个文档里
+    - 可以简短，但不要为「完整」而堆砌
+    \`\`\`
+
+    ---
+
+    ## 2. 日常开发（开工前）
+
+    **何时用**：规范已填好，开始一项新的开发任务。
+
+    \`\`\`
+    开工前先读 .agentflow/AGENTS.md 和与本任务相关的规范文档。
+
+    请先重述：目标、范围、非目标。确认后再动手。
+    改动范围最小化，只碰与当前请求相关的文件。
+    \`\`\`
+
+    ---
+
+    ## 3. 项目大更新（架构 / 模块 / 对外行为变更）
+
+    **何时用**：新增或删除模块、改目录结构、改 CLI/API 行为、确立新编码约定、引入新领域概念等。
+
+    \`\`\`
+    本次改动属于 AGENTS.md 定义的「大改动」。请在完成代码的同时，同步更新 .agentflow/ 对应文档：
+
+    - 架构 / 技术栈 / 运行方式 → project.md
+    - 编码约定 / 禁用模式 → conventions.md
+    - 业务概念 / 核心流程 / 术语 → business.md
+    - 踩坑 / 否决方案 / 敏感区 → pitfalls.md
+
+    每条信息只保留在一处。未完成文档同步前，不要宣布「已完成 / 可 merge」。
+    \`\`\`
+
+    ---
+
+    ## 4. 完成前自检
+
+    **何时用**：声称「做完了 / 可以提交 / 可以 merge」之前。
+
+    \`\`\`
+    请按 AGENTS.md「完成定义」逐条自检后再报告：
+
+    1. 相关测试 / lint / 类型检查是否已通过？
+    2. 若本次属于大改动，.agentflow/ 文档是否已同步？
+    3. 文档与代码是否一致？有无重复或放错位置的条目？
+    4. 请列出：改了哪些文件、跑了什么命令、结果如何、遗留风险、建议下一步。
+    \`\`\`
+
+    ---
+
+    ## 5. Bug 修复 / 小改动
+
+    **何时用**：修 typo、修 bug、补测试、小范围重构，不改变对外行为或架构。
+
+    \`\`\`
+    先读 .agentflow/AGENTS.md 中与本次改动相关的部分。
+
+    这是小改动，通常不需要大改规范文档；但若发现了应记入 pitfalls 的教训，或确立了新约定，请更新对应文件。
+    改完跑可用的检查（测试 / lint），再报告结果。
+    \`\`\`
+
+    ---
+
+    ## 6. 接手他人改动（代码审查 / 续作）
+
+    **何时用**：在已有分支或 PR 上继续，或审查他人代码。
+
+    \`\`\`
+    先读 .agentflow/AGENTS.md 和 project.md，了解项目边界与约定。
+
+    请先总结当前改动的目标与影响范围，对照规范检查：
+    - 是否只改了相关文件？
+    - 大改动是否已同步 .agentflow/ 文档？
+    - 有无与 conventions.md 冲突的写法？
+
+    然后再继续实现或给出审查意见。
+    \`\`\`
+
+    ---
+
+    ## 附：按工具微调（可选）
+
+    若某工具没有自动读到薄入口，可在上述话术前加一句：
+
+    - **Cursor**：\`@.agentflow/AGENTS.md\` 并附上对应章节
+    - **Claude Code**：确保 CLAUDE.md 已指向 .agentflow/
+    - **Codex**：根目录 AGENTS.md 应已指向 .agentflow/
+  `);
+}
+
 export function thinEntrypoint(_platform: string): string {
   return dedent(`
     ${AGENTFLOW_GENERATED_MARKER}
@@ -317,6 +432,7 @@ export function kickoffPrompt(name: string): string | null {
 
 export const SKELETON_FILES: Record<string, () => string> = {
   ".agentflow/AGENTS.md": agentsMd,
+  ".agentflow/prompts.md": promptsMd,
   ".agentflow/project.md": projectSkeleton,
   ".agentflow/conventions.md": conventionsSkeleton,
   ".agentflow/business.md": businessSkeleton,

@@ -8,6 +8,7 @@ import {
   kickoffPrompt,
   pitfallsSkeleton,
   projectSkeleton,
+  promptsMd,
   rootAgentsPointer,
   skillsReadme,
   thinEntrypoint,
@@ -97,6 +98,15 @@ describe("templates", () => {
       // Every prompt must tell the agent to fill empty sections first.
       expect(prompt).toMatch(/填|补齐/);
     }
+  });
+
+  it("prompts md has common scenarios", () => {
+    const content = promptsMd();
+    expect(content).toContain("项目首次接手");
+    expect(content).toContain("项目大更新");
+    expect(content).toContain("完成前自检");
+    expect(content).toContain("日常开发");
+    expect(content).toContain("flow prompts");
   });
 
   it("kickoff prompt returns null for unknown editor", () => {

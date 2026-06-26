@@ -115,6 +115,7 @@ flow init --force claude            # 覆盖已有 Flow 生成文件
 ```
 .agentflow/
   AGENTS.md          总入口（文档索引 + 维护契约）
+  prompts.md         可复制触发话术（首次接手 / 大更新 / 完成自检等）
   project.md         项目是什么
   conventions.md     怎么写代码
   business.md        业务是什么
@@ -133,7 +134,8 @@ flow init --force claude            # 覆盖已有 Flow 生成文件
 | `flow init --skeleton-only` | 仅 `.agentflow/`，不生成薄入口 |
 | `flow init -i` | 强制尝试交互选择器 |
 | `flow check` | 检查骨架、薄入口漂移、骨架是否已被 AI 填充（unfilled 提示） |
-| `flow instructions` | 打印工作说明 + 已启用工具的触发话术 |
+| `flow prompts` | 打印 `.agentflow/prompts.md` 全文（复制粘贴到 AI 对话框） |
+| `flow instructions` | 工作说明摘要（完整话术见 `prompts.md`） |
 | `flow editors list` | 查看/管理**本项目**启用的编辑器（`.agentflow/editors.yaml`） |
 | `flow tools` | 检测本机 AI 编码 CLI |
 

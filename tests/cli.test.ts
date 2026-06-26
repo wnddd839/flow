@@ -75,6 +75,7 @@ describe("cli", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("生成规范骨架");
     expect(existsSync(join(dir, ".agentflow", "AGENTS.md"))).toBe(true);
+    expect(existsSync(join(dir, ".agentflow", "prompts.md"))).toBe(true);
     expect(existsSync(join(dir, "AGENTS.md"))).toBe(false);
   });
 
@@ -208,9 +209,25 @@ describe("cli", () => {
     runCli(dir, ["init", "cursor"]);
     const result = runCli(dir, ["instructions"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("触发话术");
-    expect(result.stdout).toContain("— Cursor —");
+    expect(result.stdout).toContain("prompts.md");
     expect(result.stdout).toContain(".agentflow/AGENTS.md");
+  });
+
+  it("prompts prints prompts.md after init", () => {
+    const dir = tempDir();
+    runCli(dir, ["init", "--skeleton-only"]);
+    const result = runCli(dir, ["prompts"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("项目首次接手");
+    expect(result.stdout).toContain("项目大更新");
+    expect(result.stdout).toContain("完成前自检");
+  });
+
+  it("prompts requires init", () => {
+    const dir = tempDir();
+    const result = runCli(dir, ["prompts"]);
+    expect(result.code).toBe(1);
+    expect(result.stdout.toLowerCase()).toContain("not initialized");
   });
 
   it("init writes project-level editors.yaml, not global", () => {

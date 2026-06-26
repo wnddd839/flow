@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { Command } from "commander";
 import { doctorProject } from "./core/check.js";
@@ -201,13 +201,19 @@ program
 
 program
   .command("instructions")
-  .description("Show agent instructions and per-tool kickoff prompts.")
+  .description("Show agent work summary (full prompts: flow prompts).")
   .action(() => {
     const cwd = resolve(process.cwd());
     if (!existsSync(join(cwd, ".agentflow", "AGENTS.md"))) {
       console.log("Project not initialized. Run `flow init` first.");
       process.exitCode = 1;
       return;
+    }
+    const promptsPath = join(cwd, ".agentflow", "prompts.md");
+    if (existsSync(promptsPath)) {
+      console.log(
+        "常用可复制话术见 .agentflow/prompts.md — 运行 `flow prompts` 查看全文。\n",
+      );
     }
     console.log(AGENT_INSTRUCTIONS);
     const enabled = getEnabledEditors({ projectDir: cwd });
@@ -219,13 +225,27 @@ program
       .filter((p) => p !== null);
     if (prompts.length) {
       console.log();
-      console.log("首次接手触发话术（复制粘贴到对应工具的对话框）：");
+      console.log("（可选）各工具简短版首次接手话术：");
       for (const { display, text } of prompts) {
         console.log();
         console.log(`— ${display} —`);
         console.log(text);
       }
     }
+  });
+
+program
+  .command("prompts")
+  .description("Print copy-paste prompts from .agentflow/prompts.md.")
+  .action(() => {
+    const cwd = resolve(process.cwd());
+    const promptsPath = join(cwd, ".agentflow", "prompts.md");
+    if (!existsSync(promptsPath)) {
+      console.log("Project not initialized. Run `flow init` first.");
+      process.exitCode = 1;
+      return;
+    }
+    console.log(readFileSync(promptsPath, "utf8"));
   });
 
 program

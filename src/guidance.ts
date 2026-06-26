@@ -27,13 +27,13 @@ export function printNextSteps(editorList: string[]): void {
   console.log();
   console.log(color.bold("下一步:"));
   console.log(
-    `  ${color.cyan("1.")} 让接手的 AI 编码助手先读 ${color.bold(".agentflow/AGENTS.md")}，按各文件边界声明填写骨架。`,
+    `  ${color.cyan("1.")} 打开 ${color.bold(".agentflow/prompts.md")}，复制「项目首次接手」整段到 AI 对话框（或运行 ${color.bold("flow prompts")}）。`,
   );
   console.log(
-    `  ${color.cyan("2.")} 填完后运行 ${color.bold("flow check")} 校验骨架与薄入口是否齐全、是否漂移。`,
+    `  ${color.cyan("2.")} 让 AI 按边界声明填写 project.md 等骨架，填完运行 ${color.bold("flow check")}。`,
   );
   console.log(
-    `  ${color.cyan("3.")} 运行 ${color.bold("flow instructions")} 查看已启用工具的触发话术（复制到对话框）。`,
+    `  ${color.cyan("3.")} 日常开发 / 大更新 / 完成自检等场景，也在 ${color.bold("prompts.md")} 里找对应话术。`,
   );
   if (editorList.length === 0) {
     console.log();

@@ -8,7 +8,8 @@ describe("workbench", () => {
     expect(normalize("/init")).toBe("init");
     expect(normalize("2")).toBe("check");
     expect(normalize("/doctor")).toBe("check");
-    expect(normalize("3")).toBe("instructions");
+    expect(normalize("3")).toBe("prompts");
+    expect(normalize("/prompts")).toBe("prompts");
     expect(normalize("0")).toBe("exit");
     expect(normalize("/quit")).toBe("exit");
     expect(normalize("tools")).toBe("tools");
