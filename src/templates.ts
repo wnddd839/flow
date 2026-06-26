@@ -54,21 +54,21 @@ export function agentsMd(): string {
     Flow **不**绑定特定 agent 或编辑器，**不**编排工作流，**不**强制模型行为。
     文档填写与维护靠本文件中的契约与提示词；是否遵守取决于 AI 与开发者，而非工具拦截。
 
-    ## 项目文档（位于 \`.agentflow/\`）
+    ## 项目文档（位于 \`.agentflow/docs/\`）
 
     规范分散在以下文件中，**每个文件边界严格不重叠**。
     需要时按索引阅读，不要把所有信息都塞进本文件：
 
-    - [\`project.md\`](project.md) — 项目是什么：定位、技术栈、架构、运行方式
-    - [\`conventions.md\`](conventions.md) — 怎么写代码：命名、结构、风格、禁用模式
-    - [\`business.md\`](business.md) — 业务是什么：领域概念、核心流程、术语表
-    - [\`pitfalls.md\`](pitfalls.md) — 踩过的坑：历史教训、不再重蹈的决策
+    - [\`project.md\`](docs/project.md) — 项目是什么：定位、技术栈、架构、运行方式
+    - [\`conventions.md\`](docs/conventions.md) — 怎么写代码：命名、结构、风格、禁用模式
+    - [\`business.md\`](docs/business.md) — 业务是什么：领域概念、核心流程、术语表
+    - [\`pitfalls.md\`](docs/pitfalls.md) — 踩过的坑：历史教训、不再重蹈的决策
     - [\`skills/README.md\`](skills/README.md) — 专项 skill 路由表
     - [\`prompts.md\`](prompts.md) — **可复制触发话术**（首次接手、大更新、完成自检等）
 
     ## 工作纪律
 
-    1. **开工前**：通读 \`.agentflow/\` 下所有 \`.md\`。重述目标、范围、非目标后再动手。
+    1. **开工前**：通读 \`.agentflow/docs/\` 下所有 \`.md\`。重述目标、范围、非目标后再动手。
     2. **范围最小**：只改与当前请求相关的文件。不碰无关模块。
     3. **验证优先**：改完先跑可用的检查（类型/测试/lint），再报告完成。
     4. **交接标准**：完成时报告——改了哪些文件、跑了什么命令、结果、遗留风险、下一步。
@@ -262,9 +262,9 @@ export function promptsMd(): string {
     **何时用**：刚 \`flow init\` 完，或 AI 第一次接触本项目、规范文档仍是空章节。
 
     \`\`\`
-    请先读 .agentflow/AGENTS.md 及其索引的全部规范文档（project / conventions / business / pitfalls）。
+    请先读 .agentflow/AGENTS.md 及其索引的全部规范文档（docs/ 下的 project / conventions / business / pitfalls）。
 
-    若 project.md 等仍有未填章节，你的第一项任务是：分析本仓库代码，按每个文件顶部的「只写 / 不写」边界声明填写骨架，然后再处理我接下来的请求。
+    若 docs/project.md 等仍有未填章节，你的第一项任务是：分析本仓库代码，按每个文件顶部的「只写 / 不写」边界声明填写骨架，然后再处理我接下来的请求。
 
     填写要求：
     - 以代码为准，不要编造
@@ -292,12 +292,12 @@ export function promptsMd(): string {
     **何时用**：新增或删除模块、改目录结构、改 CLI/API 行为、确立新编码约定、引入新领域概念等。
 
     \`\`\`
-    本次改动属于 AGENTS.md 定义的「大改动」。请在完成代码的同时，同步更新 .agentflow/ 对应文档：
+    本次改动属于 AGENTS.md 定义的「大改动」。请在完成代码的同时，同步更新 .agentflow/docs/ 对应文档：
 
-    - 架构 / 技术栈 / 运行方式 → project.md
-    - 编码约定 / 禁用模式 → conventions.md
-    - 业务概念 / 核心流程 / 术语 → business.md
-    - 踩坑 / 否决方案 / 敏感区 → pitfalls.md
+    - 架构 / 技术栈 / 运行方式 → docs/project.md
+    - 编码约定 / 禁用模式 → docs/conventions.md
+    - 业务概念 / 核心流程 / 术语 → docs/business.md
+    - 踩坑 / 否决方案 / 敏感区 → docs/pitfalls.md
 
     每条信息只保留在一处。未完成文档同步前，不要宣布「已完成 / 可 merge」。
     \`\`\`
@@ -312,7 +312,7 @@ export function promptsMd(): string {
     请按 AGENTS.md「完成定义」逐条自检后再报告：
 
     1. 相关测试 / lint / 类型检查是否已通过？
-    2. 若本次属于大改动，.agentflow/ 文档是否已同步？
+    2. 若本次属于大改动，.agentflow/docs/ 文档是否已同步？
     3. 文档与代码是否一致？有无重复或放错位置的条目？
     4. 请列出：改了哪些文件、跑了什么命令、结果如何、遗留风险、建议下一步。
     \`\`\`
@@ -337,12 +337,12 @@ export function promptsMd(): string {
     **何时用**：在已有分支或 PR 上继续，或审查他人代码。
 
     \`\`\`
-    先读 .agentflow/AGENTS.md 和 project.md，了解项目边界与约定。
+    先读 .agentflow/AGENTS.md 和 docs/project.md，了解项目边界与约定。
 
     请先总结当前改动的目标与影响范围，对照规范检查：
     - 是否只改了相关文件？
-    - 大改动是否已同步 .agentflow/ 文档？
-    - 有无与 conventions.md 冲突的写法？
+    - 大改动是否已同步 .agentflow/docs/ 文档？
+    - 有无与 docs/conventions.md 冲突的写法？
 
     然后再继续实现或给出审查意见。
     \`\`\`
@@ -414,11 +414,11 @@ export const AGENT_INSTRUCTIONS = dedent(`
  */
 const KICKOFF_PROMPTS: Record<string, string> = {
   codex:
-    "先读 .agentflow/AGENTS.md 与其索引的文档。若 project.md 等仍有未填章节，先分析代码库按各文件边界声明填好，再开始我的任务。",
+    "先读 .agentflow/AGENTS.md 与其索引的 docs/ 文档。若 docs/project.md 等仍有未填章节，先分析代码库按各文件边界声明填好，再开始我的任务。",
   claude:
-    "请先读 .agentflow/AGENTS.md 和它索引的规范文档。如果 project.md、conventions.md、business.md、pitfalls.md 里还有空章节，先分析代码把它们填好（遵守每个文件顶部的边界声明），然后再处理我的请求。",
+    "请先读 .agentflow/AGENTS.md 和它索引的规范文档。如果 docs/project.md、docs/conventions.md、docs/business.md、docs/pitfalls.md 里还有空章节，先分析代码把它们填好（遵守每个文件顶部的边界声明），然后再处理我的请求。",
   cursor:
-    "先读 .agentflow/AGENTS.md 及其索引文档。把 project.md / conventions.md / business.md / pitfalls.md 里仍是占位注释的章节，按各文件边界声明分析代码后填实，再开始我要做的事。",
+    "先读 .agentflow/AGENTS.md 及其索引文档。把 docs/ 下 project.md / conventions.md / business.md / pitfalls.md 里仍是占位注释的章节，按各文件边界声明分析代码后填实，再开始我要做的事。",
   kiro: "先读 .agentflow/AGENTS.md 及其索引文档，把未填的骨架章节按边界声明补齐，再开始我的任务。",
   qoder:
     "先读 .agentflow/AGENTS.md 及其索引文档，把未填的骨架章节按边界声明补齐，再开始我的任务。",
@@ -433,9 +433,9 @@ export function kickoffPrompt(name: string): string | null {
 export const SKELETON_FILES: Record<string, () => string> = {
   ".agentflow/AGENTS.md": agentsMd,
   ".agentflow/prompts.md": promptsMd,
-  ".agentflow/project.md": projectSkeleton,
-  ".agentflow/conventions.md": conventionsSkeleton,
-  ".agentflow/business.md": businessSkeleton,
-  ".agentflow/pitfalls.md": pitfallsSkeleton,
+  ".agentflow/docs/project.md": projectSkeleton,
+  ".agentflow/docs/conventions.md": conventionsSkeleton,
+  ".agentflow/docs/business.md": businessSkeleton,
+  ".agentflow/docs/pitfalls.md": pitfallsSkeleton,
   ".agentflow/skills/README.md": skillsReadme,
 };

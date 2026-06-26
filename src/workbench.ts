@@ -173,6 +173,17 @@ function actionCheck(root: string): void {
       ),
     );
   }
+  if (report.legacyDocs.length) {
+    console.log(
+      color.brightYellow("● 规范文档仍在旧路径（建议迁入 .agentflow/docs/）:"),
+    );
+    for (const item of report.legacyDocs) console.log(`    - ${item}`);
+    console.log(
+      color.dim(
+        "    手动：mkdir .agentflow/docs && git mv .agentflow/*.md .agentflow/docs/（保留 AGENTS.md、prompts.md）",
+      ),
+    );
+  }
 }
 
 function actionPrompts(root: string): void {

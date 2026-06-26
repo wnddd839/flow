@@ -10,7 +10,7 @@
 </p>
 
 <p>
-<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.4-346538?style=for-the-badge" alt="version"></a>
+<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.5-346538?style=for-the-badge" alt="version"></a>
 <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-18+-1f6c9f?style=for-the-badge" alt="node"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-787774?style=for-the-badge" alt="license"></a>
 <a href="https://wnddd839.github.io/flow/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-111111?style=for-the-badge" alt="docs"></a>
@@ -250,10 +250,11 @@ flow init --force claude         # 覆盖已有 Flow 生成文件
 .agentflow/
 ├── AGENTS.md           总入口 + 维护契约
 ├── prompts.md          可复制触发话术
-├── project.md          项目是什么
-├── conventions.md      怎么写代码
-├── business.md         业务是什么
-├── pitfalls.md         踩过的坑
+├── docs/               规范骨架（AI 填写）
+│   ├── project.md      项目是什么
+│   ├── conventions.md  怎么写代码
+│   ├── business.md     业务是什么
+│   └── pitfalls.md     踩过的坑
 └── skills/README.md    skill 路由表
 ```
 
@@ -375,6 +376,7 @@ npm run check
 
 | 版本 | 要点 |
 |------|------|
+| **0.6.5** | 规范骨架迁入 `.agentflow/docs/`，根目录更整洁 |
 | **0.6.4** | `.agentflow/prompts.md` 场景话术 · `flow prompts` |
 | **0.6.3** | 裸 `flow` 进入交互工作台 |
 | **0.6.2** | `flow init` ↑↓ 分步向导 · Windows TTY 修复 |

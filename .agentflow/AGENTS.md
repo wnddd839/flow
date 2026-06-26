@@ -10,21 +10,21 @@ Flow 是轻巧的离线 CLI，只负责铺设规范地基：生成 `.agentflow/`
 Flow **不**绑定特定 agent 或编辑器，**不**编排工作流，**不**强制模型行为。
 文档填写与维护靠本文件中的契约与提示词；是否遵守取决于 AI 与开发者，而非工具拦截。
 
-## 项目文档（位于 `.agentflow/`）
+## 项目文档（位于 `.agentflow/docs/`）
 
 规范分散在以下文件中，**每个文件边界严格不重叠**。
 需要时按索引阅读，不要把所有信息都塞进本文件：
 
-- [`project.md`](project.md) — 项目是什么：定位、技术栈、架构、运行方式
-- [`conventions.md`](conventions.md) — 怎么写代码：命名、结构、风格、禁用模式
-- [`business.md`](business.md) — 业务是什么：领域概念、核心流程、术语表
-- [`pitfalls.md`](pitfalls.md) — 踩过的坑：历史教训、不再重蹈的决策
+- [`project.md`](docs/project.md) — 项目是什么：定位、技术栈、架构、运行方式
+- [`conventions.md`](docs/conventions.md) — 怎么写代码：命名、结构、风格、禁用模式
+- [`business.md`](docs/business.md) — 业务是什么：领域概念、核心流程、术语表
+- [`pitfalls.md`](docs/pitfalls.md) — 踩过的坑：历史教训、不再重蹈的决策
 - [`skills/README.md`](skills/README.md) — 专项 skill 路由表
 - [`prompts.md`](prompts.md) — **可复制触发话术**（首次接手、大更新、完成自检等）
 
 ## 工作纪律
 
-1. **开工前**：通读 `.agentflow/` 下所有 `.md`。重述目标、范围、非目标后再动手。
+1. **开工前**：通读 `.agentflow/docs/` 下所有 `.md`。重述目标、范围、非目标后再动手。
 2. **范围最小**：只改与当前请求相关的文件。不碰无关模块。
 3. **验证优先**：改完先跑可用的检查（类型/测试/lint），再报告完成。
 4. **交接标准**：完成时报告——改了哪些文件、跑了什么命令、结果、遗留风险、下一步。

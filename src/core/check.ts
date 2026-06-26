@@ -1,16 +1,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { getEnabledEditors } from "../editors/index.js";
+import {
+  BASE_REQUIRED_FILES,
+  resolveRequiredPath,
+  SPEC_DOC_FILES,
+} from "./paths.js";
 
-export const BASE_REQUIRED_FILES = [
-  ".agentflow/AGENTS.md",
-  ".agentflow/prompts.md",
-  ".agentflow/project.md",
-  ".agentflow/conventions.md",
-  ".agentflow/business.md",
-  ".agentflow/pitfalls.md",
-  ".agentflow/skills/README.md",
-] as const;
+export { BASE_REQUIRED_FILES, SPEC_DOC_FILES } from "./paths.js";
 
 const AGENTFLOW_POINTER = ".agentflow/AGENTS.md";
 
@@ -19,6 +16,8 @@ export interface DoctorReport {
   missing: string[];
   drift: string[];
   unfilled: string[];
+  /** Spec docs still at pre-v0.6.5 flat paths under .agentflow/ */
+  legacyDocs: string[];
   checked: string[];
   editors: string[];
 }
@@ -40,12 +39,7 @@ function pointsToAgentflow(path: string): boolean {
  * placeholders; AGENTS.md / skills/README.md have no such sections, so they
  * are skipped.
  */
-const UNFILLABLE_FILES = new Set([
-  ".agentflow/project.md",
-  ".agentflow/conventions.md",
-  ".agentflow/business.md",
-  ".agentflow/pitfalls.md",
-]);
+const UNFILLABLE_FILES = new Set<string>(SPEC_DOC_FILES);
 
 function findUnfilledSections(path: string): string[] {
   let content: string;
@@ -84,15 +78,21 @@ export function doctorProject(projectDir: string, home?: string): DoctorReport {
   const missing: string[] = [];
   const drift: string[] = [];
   const unfilled: string[] = [];
+  const legacyDocs: string[] = [];
 
   for (const relative of BASE_REQUIRED_FILES) {
-    const full = join(root, relative);
-    if (!existsSync(full)) {
+    const resolved = resolveRequiredPath(root, relative, existsSync);
+    if (!resolved) {
       missing.push(relative);
-    } else if (UNFILLABLE_FILES.has(relative)) {
-      const empty = findUnfilledSections(full);
+      continue;
+    }
+    if (resolved.legacy && UNFILLABLE_FILES.has(relative)) {
+      legacyDocs.push(resolved.relative);
+    }
+    if (UNFILLABLE_FILES.has(relative)) {
+      const empty = findUnfilledSections(resolved.path);
       if (empty.length > 0) {
-        unfilled.push(`${relative} (${empty.join(", ")})`);
+        unfilled.push(`${resolved.relative} (${empty.join(", ")})`);
       }
     }
   }
@@ -114,6 +114,7 @@ export function doctorProject(projectDir: string, home?: string): DoctorReport {
     missing,
     drift,
     unfilled,
+    legacyDocs,
     checked: [...BASE_REQUIRED_FILES, ...editorEntrypoints],
     editors: enabled.map((spec) => spec.name),
   };
