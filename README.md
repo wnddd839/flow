@@ -5,7 +5,7 @@
 <h3>轻巧的离线 CLI，为任意代码仓库铺设 AI 编码规范的地基</h3>
 
 <p>
-<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.2-346538?style=flat-square" alt="version"></a>
+<a href="https://www.npmjs.com/package/@wnddd8339/flow"><img src="https://img.shields.io/badge/version-0.6.3-346538?style=flat-square" alt="version"></a>
 <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-18+-1f6c9f?style=flat-square" alt="node"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-787774?style=flat-square" alt="license"></a>
 <a href="https://wnddd839.github.io/flow/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-111111?style=flat-square" alt="docs"></a>
@@ -38,13 +38,20 @@
 
 ```bash
 # 无需全局安装
-flow init                           # 终端里 ↑↓ 分步选择编辑器（推荐）
+flow                                # 进入交互工作台（仪表盘 + ↑↓ 菜单，推荐）
+flow init                           # 终端里 ↑↓ 分步选择编辑器
 flow init claude                    # 或直接指定平台
 flow init cursor claude             # 多平台一次配置
 
 flow check
 flow instructions                   # 复制各工具的「填骨架」触发话术
 ```
+
+**工作台**（在 Windows Terminal / Cursor 终端 / cmd 里直接运行 `flow`）：
+
+- 顶部仪表盘显示 **System Status**（项目 / 阶段 / 健康 / 已启用编辑器）与 **Quick Wizard**
+- 用 **↑↓** 选择动作、回车确认；clack 不可用时自动降级为 `flow ›` 数字/命令输入
+- 选 init → 勾选编辑器 → 生成骨架 → 给出下一步指引 → 状态实时刷新
 
 **交互式 init**（Windows Terminal / Cursor 终端 / cmd）：
 
@@ -100,7 +107,7 @@ flow init --force claude            # 覆盖已有 Flow 生成文件
 
 | 命令 | 说明 |
 |------|------|
-| `flow` | 终端里 ↑↓ 快捷菜单（init / check / instructions / help） |
+| `flow` | 进入交互工作台（仪表盘 + ↑↓ 菜单：init / check / instructions / tools / editors） |
 | `flow init [编辑器...]` | 生成 `.agentflow/`；无参数时在终端里交互选择 |
 | `flow init --skeleton-only` | 仅 `.agentflow/`，不生成薄入口 |
 | `flow init -i` | 强制尝试交互选择器 |
@@ -128,5 +135,6 @@ npm run check          # lint + typecheck + build + test
 node dist/cli.js --version
 ```
 
+> **v0.6.3** 起 `flow`（无参数）进入交互工作台：仪表盘 + ↑↓ 菜单，clack 不可用时降级为数字输入。  
 > **v0.6.2** 起 `flow init` 支持 ↑↓ 分步向导（`@clack/prompts` 1.6），并修复 Windows CMD 的 TTY 检测。  
 > **v0.6.1** 起 CLI 为 TypeScript 实现（npm 包 [`@wnddd8339/flow`](https://www.npmjs.com/package/@wnddd8339/flow)）。v0.5 及更早的 Python 版已移至 [`archive/python/`](archive/python/)。

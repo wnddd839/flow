@@ -73,7 +73,7 @@ describe("cli", () => {
     const dir = tempDir();
     const result = runCli(dir, ["init", "--skeleton-only"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Initialized specification skeleton");
+    expect(result.stdout).toContain("生成规范骨架");
     expect(existsSync(join(dir, ".agentflow", "AGENTS.md"))).toBe(true);
     expect(existsSync(join(dir, "AGENTS.md"))).toBe(false);
   });
@@ -97,7 +97,7 @@ describe("cli", () => {
     const dir = tempDir();
     const result = runCli(dir, ["init", "cursor"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Editors: cursor");
+    expect(result.stdout).toContain("编辑器: cursor");
     expect(existsSync(join(dir, ".cursor", "rules", "agentflow.mdc"))).toBe(
       true,
     );
@@ -107,7 +107,7 @@ describe("cli", () => {
     const dir = tempDir();
     const result = runCli(dir, ["init", "claude"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Editors: claude");
+    expect(result.stdout).toContain("编辑器: claude");
     expect(existsSync(join(dir, "CLAUDE.md"))).toBe(true);
   });
 
@@ -115,7 +115,7 @@ describe("cli", () => {
     const dir = tempDir();
     const result = runCli(dir, ["init", "codex", "claude"]);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Editors: codex, claude");
+    expect(result.stdout).toContain("编辑器: codex, claude");
     expect(existsSync(join(dir, "AGENTS.md"))).toBe(true);
     expect(existsSync(join(dir, "CLAUDE.md"))).toBe(true);
   });

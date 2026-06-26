@@ -31,7 +31,7 @@
 | 运行时依赖 | `commander`（CLI）、`@clack/prompts` 1.6（交互 ↑↓ 选择） |
 | 开发依赖 | `vitest`、`tsup`、`typescript`、`@biomejs/biome` |
 | 打包 | `tsup` 单文件 ESM → `dist/cli.js`，`bin.flow` 指向该入口 |
-| 当前版本 | `0.6.2`（见 `src/version.ts` 与 `package.json`） |
+| 当前版本 | `0.6.3`（见 `src/version.ts` 与 `package.json`） |
 | 分发 | npm：`@wnddd8339/flow`（`npx @wnddd8339/flow`） |
 | 网络 | 无 API 调用、无网络依赖 |
 
@@ -44,6 +44,9 @@ src/
   templates.ts        规范文档与薄入口的字符串模板（只产字符串，不写盘）
   editors/            编辑器配置（项目级 `.agentflow/editors.yaml`）、校验与 reconcile
   init-ui.ts          flow init 分步向导（@clack/prompts multiselect）
+  workbench.ts        裸 flow 的交互工作台（仪表盘 + ↑↓ 菜单 + 动作分发）
+  guidance.ts         init 结果与下一步指引（cli 与 workbench 共用）
+  ui/render.ts        零依赖终端 UI：ANSI 配色、面板、logo、胶囊
   terminal.ts         TTY 检测、Windows CONIN$ 回退
   diagnostics/tools.ts 本地 AI CLI 检测
   util/dedent.ts      模板缩进处理
@@ -73,7 +76,7 @@ npm run build
 **初始化当前项目规范骨架：**
 
 ```bash
-flow                           # 终端 ↑↓ 快捷菜单
+flow                           # 进入交互工作台（仪表盘 + ↑↓ 菜单）
 flow init                      # ↑↓ 分步选择编辑器；非交互环境需显式指定
 flow init cursor               # 骨架 + Cursor 薄入口
 flow init cursor claude        # 多个平台 positional

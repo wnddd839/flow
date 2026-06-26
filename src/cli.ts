@@ -1,6 +1,5 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import * as clack from "@clack/prompts";
 import { Command } from "commander";
 import { doctorProject } from "./core/check.js";
 import { initProject } from "./core/init.js";
@@ -15,8 +14,8 @@ import {
   normalizeEditorNames,
   removeCustomEditor,
 } from "./editors/index.js";
+import { printInitResult, printNextSteps } from "./guidance.js";
 import {
-  canRunInteractivePicker,
   interactivePickerHint,
   PickCancelledError,
   pickEditors,
@@ -24,11 +23,10 @@ import {
 import {
   AGENT_INSTRUCTIONS,
   BUILTIN_EDITOR_IDS,
-  DEFAULT_PLATFORMS,
   kickoffPrompt,
-  PLATFORM_DISPLAY,
 } from "./templates.js";
 import { VERSION } from "./version.js";
+import { canRunWorkbench, runWorkbench } from "./workbench.js";
 
 const program = new Command();
 
@@ -39,49 +37,18 @@ program
   )
   .version(VERSION, "-V, --version", "Show version")
   .action(async () => {
-    if (canRunInteractivePicker()) {
-      const action = await clack.select({
-        message: "Flow",
-        options: [
-          {
-            value: "init",
-            label: "init — 初始化规范骨架",
-            hint: "↑↓ 选择编辑器",
-          },
-          {
-            value: "check",
-            label: "check — 检查骨架与薄入口",
-          },
-          {
-            value: "instructions",
-            label: "instructions — 查看触发话术",
-          },
-          {
-            value: "help",
-            label: "help — 查看完整帮助",
-          },
-        ],
-      });
-      if (clack.isCancel(action)) {
-        clack.cancel("已退出");
-        return;
-      }
-      if (action === "init") {
-        await program.parseAsync(["node", "flow", "init"]);
-        return;
-      }
-      if (action === "check") {
-        runCheck("check");
-        return;
-      }
-      if (action === "instructions") {
-        await program.parseAsync(["node", "flow", "instructions"]);
-        return;
-      }
+    if (canRunWorkbench()) {
+      await runWorkbench();
+      return;
     }
     program.outputHelp();
     console.log();
-    console.log("先来一发：`flow init`（终端里 ↑↓ 选择编辑器，空格勾选）。");
+    console.log(
+      "在交互终端（Windows Terminal / Cursor 终端）里直接运行 `flow` 可进入工作台。",
+    );
+    console.log(
+      "或：`flow init <编辑器>`、`flow check`、`flow instructions`。",
+    );
   });
 
 program
@@ -155,43 +122,9 @@ program
       editors: editorList,
       force: options.force,
     });
-    console.log(`Initialized specification skeleton in ${cwd}`);
-    if (editorList.length) {
-      console.log(`Editors: ${editorList.join(", ")}`);
-    } else {
-      console.log("Editors: (none — .agentflow/ skeleton only)");
-    }
-    console.log(`Created: ${result.created.length}`);
-    console.log(`Skipped: ${result.skipped.length}`);
-    if (result.editorsRemoved.length) {
-      console.log(
-        `Removed disabled editor entrypoints: ${result.editorsRemoved.join(", ")}`,
-      );
-    }
+    printInitResult(cwd, editorList, result);
     printNextSteps(editorList);
   });
-
-function printNextSteps(editorList: string[]): void {
-  console.log();
-  console.log("下一步:");
-  console.log(
-    "  1. 让接手的 AI 编码助手先读 `.agentflow/AGENTS.md`，按各文件边界声明填写骨架。",
-  );
-  console.log(
-    "  2. 填完后运行 `flow check` 校验骨架与薄入口是否齐全、是否漂移。",
-  );
-  console.log(
-    "  3. 运行 `flow instructions` 查看已启用工具的触发话术（复制粘贴到对话框）。",
-  );
-  if (editorList.length === 0) {
-    console.log();
-    console.log("按需添加薄入口（任选一个或多个，不必只用 cursor）：");
-    for (const name of DEFAULT_PLATFORMS) {
-      console.log(`  flow init ${name.padEnd(12)}  ${PLATFORM_DISPLAY[name]}`);
-    }
-    console.log("  flow init cursor claude codex   # 多平台一次配置");
-  }
-}
 
 function runCheck(label: "check" | "doctor"): void {
   const cwd = resolve(process.cwd());
